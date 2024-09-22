@@ -19,7 +19,7 @@ urlpatterns = [
     path('search-suggestions/', search_suggestions, name='search_suggestions'),
     path('search-history/', search_history, name='search_history'),
 
-    # API Views
+    # API Views for future update 
     path('api/products/', ProductListView.as_view(), name='product_list_api'),
     path('api/products/<int:pk>/', ProductDetailView.as_view(), name='product_detail_api'),
     path('api/categories/', CategoryListView.as_view(), name='category_list_api'),
