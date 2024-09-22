@@ -3,7 +3,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.db.models import Q
 from django.http import JsonResponse
-from .models import Category, Product, Cart, CartItem, Order, OrderItem, SearchHistory
+from .models import Category, Product, Cart, CartItem, Order, OrderItem, SearchHistory, Review
 
 def home(request):
     trending_products = Product.objects.filter(trending_now=True)[:4]
@@ -103,6 +103,32 @@ def search_history(request):
     history = SearchHistory.objects.filter(user=request.user).order_by('-created_at')[:5]
     history_list = [entry.query for entry in history]
     return JsonResponse(history_list, safe=False)
+    
+@login_required
+def submit_review(request, product_id):
+    product = get_object_or_404(Product, id=product_id)
+    
+    if request.method == "POST":
+        review_text = request.POST.get('review')
+        rating = int(request.POST.get('rating'))
+
+        existing_review = Review.objects.filter(product=product, user=request.user).first()
+
+        if existing_review:
+            messages.error(request, "You have already submitted a review for this product.")
+            return redirect('product_detail', product_id=product.id)
+        
+        new_review = Review.objects.create(
+            product=product,
+            user=request.user,
+            review_text=review_text,
+            rating=rating
+        )
+        new_review.save()
+        messages.success(request, "Thank you for the review !")
+        return redirect('product_detail', product_id=product.id)
+
+    return redirect('product_detail', product_id=product.id)
     
 # API views for DRF
 
