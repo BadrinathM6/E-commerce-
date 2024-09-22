@@ -28,6 +28,15 @@ class Product(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    def average_rating(self):
+        reviews = self.reviews.all()
+        if reviews:
+            return sum([review.rating for review in reviews]) / len(reviews)
+        return 0
+
+    def number_of_reviews(self):
+        return self.reviews.count() 
+     
     def __str__(self):
         return self.name
 
@@ -90,3 +99,17 @@ class SearchHistory(models.Model):
 
     def __str__(self):
         return f"Search Query: {self.query} by {self.user.username if self.user else 'Anonymous'}"
+        
+# Review model
+
+class Review(models.Model):
+    RATING_OPTIONS = [(i, str(i)) for i in range(1, 6)] 
+
+    product = models.ForeignKey(Product, related_name='reviews', on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE) 
+    review = models.TextField(blank=True, null=True)
+    rating = models.IntegerField(choices=RATING_OPTIONS)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.product.name} - {self.rating} stars"
