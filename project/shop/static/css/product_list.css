@@ -4,7 +4,7 @@
   padding: 16px;
   border-radius: 8px;
   /*max-width: 600px;*/
-  width:100vw;
+  width:97.5%;
   font-family: Arial, sans-serif;
 }
 
@@ -74,6 +74,7 @@
   -webkit-box-orient: vertical;
   overflow: hidden;
   text-overflow: ellipsis;
+  line-clamp:2;
   line-height: 1.2em; /* Adjust line height */
   max-height: 2.7em;  /* Height = line-height * number of lines */
 }
