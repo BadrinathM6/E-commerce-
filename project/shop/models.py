@@ -1,8 +1,9 @@
 from django.db import models
 from django.contrib.auth.models import User
+import os
 
 def image_upload_path(instance, filename):
-    return os.path.join('products', filename)
+    return os.path.join('product/' , filename)
 
 # Category Model
 class Category(models.Model):
@@ -18,16 +19,24 @@ class Category(models.Model):
 class Product(models.Model):
     name = models.CharField(max_length=255)
     description = models.TextField()
-    price = models.DecimalField(max_digits=10, decimal_places=2)
-    discount_price = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
+    discount_percentage = models.DecimalField(max_digits=5,decimal_places=2,null=True)
+    original_price = models.DecimalField(max_digits=10, decimal_places=2,null=True)
     main_image = models.ImageField(upload_to=image_upload_path)
-    category = models.ForeignKey(Category, related_name='products', on_delete=models.CASCADE)
+    category = models.ForeignKey(Category, related_name='product', on_delete=models.CASCADE)
     trending_now = models.BooleanField(default=False)
     deals_of_the_day = models.BooleanField(default=False)
     stock = models.IntegerField(default=0)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    @property
+    def discounted_price(self):
+        if self.discount_percentage > 0:
+            discount_amount = (self.original_price * self.discount_percentage) / 100
+            return self.original_price - discount_amount
+        return self.original_price  
+
+    
     def average_rating(self):
         reviews = self.reviews.all()
         if reviews:

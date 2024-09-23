@@ -35,11 +35,13 @@ def product_list(request):
             SearchHistory.objects.create(query=search_query)
 
     categories = Category.objects.all()
-    return render(request, 'product_list.html', {
+    rating_range = range(1, 6)
+    return render(request, 'shop/product_list.html', {
         'products': products,
         'categories': categories,
         'current_category': category_id,
-        'search_query': search_query
+        'search_query': search_query,
+        'rating_range': rating_range,
     })
 
 def product_detail(request, product_id):
