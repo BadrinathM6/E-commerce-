@@ -4,11 +4,14 @@ import os
 
 def image_upload_path(instance, filename):
     return os.path.join('product/' , filename)
+    
+def category_image_upload_path(instance, filename):
+    return os.path.join('category/' , filename)
 
 # Category Model
 class Category(models.Model):
     name = models.CharField(max_length=255)
-    image= models.ImageField(upload_to=image_upload_path)
+    image= models.ImageField(upload_to=category_image_upload_path)
     slug = models.SlugField(unique=True)
 
     def __str__(self):
@@ -25,6 +28,9 @@ class Product(models.Model):
     category = models.ForeignKey(Category, related_name='product', on_delete=models.CASCADE)
     trending_now = models.BooleanField(default=False)
     deals_of_the_day = models.BooleanField(default=False)
+    short_desc= models.TextField(null=True)
+    short_disc= models.TextField(null=True)
+    short_name=models.TextField(null=True)
     stock = models.IntegerField(default=0)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

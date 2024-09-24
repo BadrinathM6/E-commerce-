@@ -7,9 +7,9 @@ from .models import Category, Product, Cart, CartItem, Order, OrderItem, SearchH
 
 def home(request):
     trending_products = Product.objects.filter(trending_now=True)[:4]
-    deal_products = Product.objects.filter(deals_of_the_day=True)[:4]
+    deal_products = Product.objects.filter(deals_of_the_day=True)[:3]
     categories = Category.objects.all()
-    return render(request, 'home.html', {
+    return render(request, 'shop/home.html', {
         'categories': categories,
         'trending_products': trending_products,
         'deal_products': deal_products,
@@ -96,8 +96,14 @@ def search(request):
     return redirect('home')
 
 def search_suggestions(request):
-    query = request.GET.get('q', '')
-    suggestions = Product.objects.filter(name__icontains=query).values_list('name', flat=True)[:5]
+    query = request.GET.get('q', '').strip()
+    suggestions = []
+
+    # Allow single-character searches
+    if query:
+        # Filter products based on the query
+        suggestions = Product.objects.filter(short_name__icontains=query).values_list('short_name', flat=True)[:10]  # Get top 10 matches
+
     return JsonResponse(list(suggestions), safe=False)
 
 @login_required

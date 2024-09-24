@@ -1,6 +1,5 @@
-{% load static%}
+{% load static %}
 {% load humanize %}
-
 
 <!DOCTYPE html>
 <html>
@@ -17,23 +16,31 @@
   <div class="product-card">
     <div class="product-image">
       <img src="{{ product.main_image.url }}" alt="iPhone">
-
     </div>
     <div class="product-details">
       <h2 class="product-title">{{ product.name }}</h2>
       <div class="ratings">
+      {% if product.review_count == 0 %}
+        <span class="no-ratings">No ratings yet</span>
         <span class="stars">
-          {% for i in rating_range %}
+          {% for i in ""|ljust:5 %}
+            <span class="fa fa-star"></span>
+          {% endfor %}
+        </span>
+      {% else %}
+        <span class="stars">
+        {% for i in rating_range %}
             {% if product.average_rating >= i %}
-                <span class="fa fa-star checked"></span>
+                <span class="fa fa-star checked"></span>  <!-- Full Star -->
             {% elif product.average_rating >= i|add:"-0.5" %}
-                <span class="fa fa-star-half-alt checked"></span>  
+                <span class="fa fa-star-half-alt checked"></span>  <!-- Half Star -->
             {% else %}
-                <span class="fa fa-star"></span>
+                <span class="fa fa-star"></span>  <!-- Empty Star -->
             {% endif %}
         {% endfor %}
         </span>
         <span class="rating-count">{{ product.number_of_reviews }}</span>
+      {% endif %}
         <span class="badge">✅ </span>
       </div>
       <div class="pricing">
@@ -45,6 +52,5 @@
   </div>
   {% endfor %}
   </div>
-
 </body>
 </html>

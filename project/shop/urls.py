@@ -25,4 +25,8 @@ urlpatterns = [
     path('api/products/<int:pk>/', ProductDetailView.as_view(), name='product_detail_api'),
     path('api/categories/', CategoryListView.as_view(), name='category_list_api'),
     path('api/search-history/', SearchHistoryView.as_view(), name='search_history_api'),
-]+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+]
+
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+    urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

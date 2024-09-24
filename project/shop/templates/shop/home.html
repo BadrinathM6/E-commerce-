@@ -1,0 +1,116 @@
+{% load static %}
+{% load humanize %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Home</title>
+    <link rel="icon" href="{% static 'image/cart.png' %}" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="{% static 'css/home.css' %}">
+</head>
+<body>
+
+    <nav class="navbar">
+        <div class="cartlogo">
+            <img src="{% static 'images/product/Logo/fixed-removebg-preview.png' %}" alt="image icon" />
+        </div>
+        <div class="searchbar">
+            <input type="text" id="search-input" placeholder="search for the product you looking for" />
+            <img src="{% static 'images/product/Logo/search.png' %}" alt="search" class="search-icon" />
+        </div>
+        <div class="usershop-icon">
+            <i class="fa fa-heart"></i>
+            <i class="fa fa-shopping-cart"></i>
+            <i class="fa fa-user"></i>
+        </div>
+    </nav>
+    <fieldset id="f1">
+        <ul>
+            {% for category in categories %}
+            <li>
+                <img class="fieldsetimg" src="{{ category.image.url }}" alt="{{ category.name }}" /> <br />
+                <a class="pick" href="{% url 'product_list' %}?category={{ category.id }}">{{ category.name }}</a>
+            </li>
+            {% endfor %}
+        </ul>
+    </fieldset>
+    
+    <div class="product-grid">
+    {% if trending_products %}
+        {% for product in trending_products %}
+            <a class ="product_list_cont" href="{% url 'product_detail' product.id %}">
+                <div class="product-item">
+                    <img src="{{ product.main_image.url }}" alt="{{ product.name }}" />
+                    <p>{{ product.short_desc }}</p>
+                    <h6>{{ product.short_disc }}</h6>
+                </div>
+            </a>
+        {% endfor %}
+    {% else %}
+        <p>No trending products available at the moment.</p>
+    {% endif %}
+    
+    </div>
+    
+    <h2 style="color: green; text-align: center; ">Exclusive Offers for Today </h2><br>
+    <h3 style= "text-align: center;">Offer Ends In: <span id="timer"></span></h3>
+    <div class="product-container">
+    {% if deal_products %}
+        <div class="product-large product-card">
+            <img src="{{ deal_products.0.main_image.url }}" alt="{{ deal_products.0.name }}" class="product-image">
+            <div class="product-info">
+                <h2 class="product-title">{{ deal_products.0.name }}</h2>
+                <p class="product-price">₹{{ deal_products.0.discounted_price | floatformat:0 | intcomma }} 
+                    <span class="discount">{{ deal_products.0.discount_percentage | floatformat:0 | intcomma }}% off</span>
+                </p>
+            </div>
+        </div>
+
+        <div class="product-small-container">
+            {% for product in deal_products|slice:"1:" %}
+            <div class="product-card">
+                <img src="{{ product.main_image.url }}" alt="{{ product.name }}" class="product-image">
+                <div class="product-info">
+                    <h2 class="product-title">{{ product.name }}</h2>
+                    <p class="product-price">₹{{ product.discounted_price | floatformat:0 | intcomma }} 
+                        <span class="discount">{{ product.discount_percentage | floatformat:0 | intcomma }}% off</span>
+                    </p>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <p>No deals available today.</p>
+    {% endif %}
+    </div>
+    
+    <script>
+    var saleEndDate = new Date("Sep 30, 2024 23:59:59").getTime();
+
+    var countdown = setInterval(function() {
+
+        var now = new Date().getTime();
+
+        var timeLeft = saleEndDate - now;
+
+        var days = Math.floor(timeLeft / (1000 * 60 * 60 * 24));
+        var hours = Math.floor((timeLeft % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        var minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
+        var seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
+
+        document.getElementById("timer").innerHTML = days + "d " + hours + "h "
+        + minutes + "m " + seconds + "s ";
+
+        if (timeLeft < 0) {
+            clearInterval(countdown);
+            document.getElementById("timer").innerHTML = "Sale Ended";
+        }
+    }, 1000);
+</script>
+  
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="{% static 'js/search.js' %}"></script>
+</body>
+</html>

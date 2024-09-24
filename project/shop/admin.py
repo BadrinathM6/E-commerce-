@@ -7,7 +7,7 @@ class ProductImageInline(admin.TabularInline):
 
 class ProductAdmin(admin.ModelAdmin):
     inlines = [ProductImageInline]
-    list_display = ('name', 'category', 'original_price', 'discount_percentage', 'discounted_price', 'total_sales') 
+    list_display = ('name', 'category', 'original_price', 'discount_percentage', 'discounted_price', 'total_sales', 'short_disc','short_desc', 'short_name') 
 
     def total_sales(self, obj):
         total_sales_count = OrderItem.objects.filter(product=obj).count()
