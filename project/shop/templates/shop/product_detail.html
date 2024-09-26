@@ -1,0 +1,176 @@
+{% load static %}
+{% load humanize %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ product.name }}</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
+    <link rel="stylesheet" href="{% static 'css/product_detail.css' %}">
+</head>
+<body>
+    <div class="container">
+        <div class="product-container">
+            <div class="product-images">
+                <img src="{{ product.main_image.url }}" alt="{{ product.name }}" class="main-image" id="mainImage"></div>
+            <div class="thumbnail-container">
+                {% for image in product.images.all %}
+                <img src="{{ image.image.url }}" alt="{{ product.name }}" class="thumbnail" onclick="changeImage(this.src)">
+                {% endfor %}
+            </div>
+            
+            <div class="product-details">
+                <h1>{{ product.name }}</h1>
+                <div class="product-description">
+                  {% if description_points %}
+                  <ul>
+                  {% for point in description_points %}
+                    <li>{{ point | linebreaks }}</li>
+                  {% endfor %}
+                  </ul>
+                  {% else %}
+                  <p>No description available</p>
+                  {% endif %}
+                </div>
+
+                <div class="rating">
+    <span>({{ product.average_rating|floatformat:1 }})</span><br> <!-- Display the numeric average rating -->
+
+    <!-- Render the stars based on the average rating -->
+    <span class="stars">
+        {% for i in rating_range %}  <!-- Loop through the range 1 to 5 (inclusive) -->
+            {% if product.average_rating >= i %}
+                <span class="fa fa-star checked"></span>  <!-- Full Star -->
+            {% elif product.average_rating >= i|add:"-0.5" %}
+                <span class="fa fa-star-half-alt checked"></span>  <!-- Half Star -->
+            {% else %}
+                <span class="fa fa-star"></span>  <!-- Empty Star -->
+            {% endif %}
+        {% endfor %}
+    </span>
+</div>
+
+                
+                <p class="price">
+                    {% if product.discount_percentage %}
+                        <span class="original-price">₹{{ product.original_price | floatformat:0 | intcomma}}</span>
+                        <span class="discounted-price">₹{{ product.discounted_price | floatformat:0 | intcomma }}</span>
+                        <span class="discount-main">{{ product.discount_percentage | floatformat:0 }}% OFF</span>
+                    {% else %}
+                        ${{ product.original_price | floatformat:0 | intcomma  }}
+                    {% endif %}
+                </p>
+                <div class="quantity-selector">
+                    <button onclick="updateQuantity(-1)">-</button>
+                    <span id="quantity">1</span>
+                    <button onclick="updateQuantity(1)">+</button>
+                </div>
+                <button class="btn btn-primary" onclick="addToCart()">Add to Cart</button>
+                <button class="btn btn-success" onclick="buyNow()">Buy Now</button>
+            </div>
+        </div>
+
+        <div class="reviews">
+            <h2>Customer Reviews ({{ product.number_of_reviews }})</h2>
+            {% for review in product.reviews.all %}
+                <div class="review">
+                    <div class="rating">
+                        {% for i in "12345" %}
+                            {% if i|add:"0" <= review.rating %}
+                                ★
+                            {% else %}
+                                ☆
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+                    <p><strong>{{ review.user.username }}</strong> - {{ review.review }}</p>
+                </div>
+            {% empty %}
+                <p>No reviews yet. Be the first to review this product!</p>
+            {% endfor %}
+        </div>
+
+        <div class="review-form">
+            <h3>Write a Review</h3>
+            <form method="post" action="{% url 'submit_review' product.id %}">
+                {% csrf_token %}
+                <div class="rating" id="newReviewRating">
+                    {% for i in "12345" %}
+                        <span onclick="setRating({{ i }})">☆</span>
+                    {% endfor %}
+                </div>
+                <input type="hidden" name="rating" id="ratingInput" value="0">
+                <textarea name="review" id="reviewText" placeholder="Write your review here..."></textarea>
+                <button type="submit" class="btn btn-primary">Submit Review</button>
+            </form>
+        </div>
+
+        <div class="similar-products">
+          <h2>Similar Products</h2>
+          <div class="scroll-container">
+            <div class="product-grid">
+            {% for similar_product in similar_products %}
+                <div class="product-card">
+                    <img src="{{ similar_product.main_image.url }}" alt="{{ product.name }}">
+                    <h3>{{ similar_product.name }}</h3>
+                    <div class="pricing">
+                        <span class="discount">{{ similar_product.discount_percentage | floatformat:0 }}%</span>
+                        <span class="original-price">₹{{ similar_product.original_price | floatformat:0 | intcomma }}</span>
+                        <span class="discounted-price">₹{{ similar_product.discounted_price | floatformat:0 | intcomma }}</span>
+                    </div>
+                </div>
+            {% endfor %}
+            </div>
+          </div>
+        </div>
+
+
+    <script>
+        let quantity = 1;
+        let rating = 0;
+
+        function changeImage(src) {
+            document.getElementById('mainImage').src = src;
+        }
+
+        function updateQuantity(change) {
+            quantity = Math.max(1, quantity + change);
+            document.getElementById('quantity').textContent = quantity;
+        }
+
+        function setRating(value) {
+            rating = value;
+            document.getElementById('ratingInput').value = value;
+            const stars = document.querySelectorAll('#newReviewRating span');
+            stars.forEach((star, index) => {
+                star.textContent = index < value ? '★' : '☆';
+            });
+        }
+
+        function addToCart() {
+            fetch("{% url 'add_to_cart' product.id %}", {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}',
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({quantity: quantity})
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Product added to cart!');
+                } else {
+                    alert('Error adding product to cart.');
+                }
+            });
+        }
+
+        function buyNow() {
+            alert('Buy Now functionality not implemented yet.');
+        }
+    </script>
+</body>
+</html>

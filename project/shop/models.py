@@ -59,7 +59,7 @@ class Product(models.Model):
 # ProductImage Model (For Thumbnails)
 class ProductImage(models.Model):
     product = models.ForeignKey(Product, related_name='images', on_delete=models.CASCADE)
-    image = models.ImageField(upload_to='products/thumbnails/')
+    image = models.ImageField(upload_to='products/')
     is_thumbnail = models.BooleanField(default=False)
 
     def __str__(self):

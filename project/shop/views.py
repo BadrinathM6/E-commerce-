@@ -46,7 +46,26 @@ def product_list(request):
 
 def product_detail(request, product_id):
     product = get_object_or_404(Product, id=product_id)
-    return render(request, 'product_detail.html', {'product': product})
+    rating_range = range(1, 6)
+    similar_products = Product.objects.filter(category=product.category).exclude(id=product.id)
+    
+    if similar_products.count() < 3:
+        remaining_count = 3 - similar_products.count()
+        other_products = Product.objects.exclude(Q(category=product.category) | Q(id=product.id))[:remaining_count]
+        similar_products = list(similar_products) + list(other_products)
+    else:
+        similar_products = similar_products[:7]
+    
+    description_points = product.description.split("*")
+    
+    context = {
+        'product': product,
+        'similar_products': similar_products,
+        'description_points': description_points,
+        'rating_range': rating_range,
+    }
+    return render(request, 'shop/product_detail.html', context)
+    
 
 @login_required
 def add_to_cart(request, product_id):
