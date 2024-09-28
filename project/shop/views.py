@@ -12,13 +12,15 @@ from .forms import NameUserCreationForm, NameAuthenticationForm
 
 def register_view(request):
     if request.method == 'POST':
-        form = CustomUserCreationForm(request.POST)
+        form = NameUserCreationForm(request.POST)
         if form.is_valid():
-            user = form.save()
-            login(request, user)
-            return redirect('home')  
+            form.save()
+            username = form.cleaned_data.get('username')
+            messages.success(request, f'Account created for {username}!')
+            return redirect('login') 
     else:
-        form = CustomUserCreationForm()
+        form = NameUserCreationForm()
+
     return render(request, 'shop/register.html', {'form': form})
 
 class CustomLoginView(LoginView):
@@ -26,13 +28,26 @@ class CustomLoginView(LoginView):
     template_name = 'shop/login.html'
 
     def form_valid(self, form):
-        remember_me = form.cleaned_data.get('remember_me')
-        if not remember_me:
-            self.request.session.set_expiry(0)
+        username = form.cleaned_data.get('username')
+        password = form.cleaned_data.get('password')
+    
+        user = authenticate(self.request, username=username, password=password)
+    
+        if user is not None:
+            login(self.request, user) 
+        
+            remember_me = form.cleaned_data.get('remember_me')
+            if not remember_me:
+                self.request.session.set_expiry(0)
+            else:
+                self.request.session.set_expiry(1209600) 
+        
+            messages.success(self.request, 'You have successfully logged in.')
+            return super().form_valid(form)
         else:
-            self.request.session.set_expiry(1209600)
-        return super().form_valid(form)
-
+            messages.error(self.request, 'Invalid username or password.')
+            return self.form_invalid(form)
+        
 def home(request):
     trending_products = Product.objects.filter(trending_now=True)[:4]
     deal_products = Product.objects.filter(deals_of_the_day=True)[:3]

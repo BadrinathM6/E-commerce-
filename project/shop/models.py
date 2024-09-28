@@ -1,5 +1,5 @@
 from django.db import models
-from django.contrib.auth.models import User, Group, Permission
+from django.contrib.auth.models import User
 import os
 from django.contrib.auth.models import AbstractUser
 from django.utils import timezone
@@ -18,8 +18,6 @@ class NameUser(AbstractUser):
     last_login = models.DateTimeField(null=True, blank=True)
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
-    groups = models.ManyToManyField(Group, related_name='nameuser_groups')
-    user_permissions = models.ManyToManyField(Permission, related_name='nameuser_permissions')
    
     def __str__(self):
         return self.username
