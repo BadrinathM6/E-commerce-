@@ -75,7 +75,7 @@
             {% for review in product.reviews.all %}
                 <div class="review">
                     <div class="rating">
-                        {% for i in "12345" %}
+                        {% for i in rating_range %}
                             {% if i|add:"0" <= review.rating %}
                                 ★
                             {% else %}
@@ -95,7 +95,7 @@
             <form method="post" action="{% url 'submit_review' product.id %}">
                 {% csrf_token %}
                 <div class="rating" id="newReviewRating">
-                    {% for i in "12345" %}
+                    {% for i in rating_range %}
                         <span onclick="setRating({{ i }})">☆</span>
                     {% endfor %}
                 </div>
@@ -188,6 +188,7 @@
         function buyNow() {
             alert('Buy Now functionality not implemented yet.');
         }
+
     </script>
 </body>
 </html>

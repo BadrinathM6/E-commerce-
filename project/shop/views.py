@@ -1,6 +1,8 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
+from django.views.decorators.http import require_POST
 from django.contrib import messages
+import json
 from django.db.models import Q
 from django.http import JsonResponse
 from .models import Category, Product, Cart, CartItem, Order, OrderItem, SearchHistory, Review
@@ -17,11 +19,11 @@ def register_view(request):
             return redirect('home')  
     else:
         form = CustomUserCreationForm()
-    return render(request, 'register.html', {'form': form})
+    return render(request, 'shop/register.html', {'form': form})
 
 class CustomLoginView(LoginView):
     form_class = NameAuthenticationForm
-    template_name = 'login.html'
+    template_name = 'shop/login.html'
 
     def form_valid(self, form):
         remember_me = form.cleaned_data.get('remember_me')
@@ -95,23 +97,75 @@ def product_detail(request, product_id):
 
 @login_required
 def add_to_cart(request, product_id):
-    product = get_object_or_404(Product, id=product_id)
-    cart, created = Cart.objects.get_or_create(user=request.user)
-    cart_item, item_created = CartItem.objects.get_or_create(cart=cart, product=product)
+    if request.method == 'POST':
+        product = get_object_or_404(Product, id=product_id)
+        cart, created = Cart.objects.get_or_create(user=request.user)
+        cart_item, item_created = CartItem.objects.get_or_create(cart=cart, product=product)
+
+        if not item_created:
+            cart_item.quantity += 1
+            cart_item.save()
+
+        response_data = {
+            'success': True,
+            'message': f"{product.name} added to cart."
+        }
+        return JsonResponse(response_data)
     
-    if not item_created:
-        cart_item.quantity += 1
-        cart_item.save()
-    
-    messages.success(request, f"{product.name} added to cart.")
-    return redirect('product_list')
+    return JsonResponse({'success': False, 'error': 'Invalid request method.'}) 
+
+@require_POST
+def update_cart(request, product_id):
+    data = json.loads(request.body)
+    quantity = data.get('quantity', 1)
+
+    cart = get_object_or_404(Cart, user=request.user)
+
+    cart_item, created = CartItem.objects.get_or_create(cart=cart, product_id=product_id)
+    cart_item.quantity = quantity
+    cart_item.save()
+
+    cart_items = CartItem.objects.filter(cart=cart)
+    total_original_price = sum(item.product.original_price * item.quantity for item in cart_items)
+    total_discounted_price = sum(item.product.discounted_price * item.quantity for item in cart_items)
+    total_discount = total_original_price - total_discounted_price
+
+    return JsonResponse({
+        'success': True,
+        'total_original_price': total_original_price,
+        'total_discounted_price': total_discounted_price,
+        'total_discount': total_discount,
+    })
+
+def remove_from_cart(request, product_id):
+    cart = get_object_or_404(Cart, user=request.user) 
+    product = get_object_or_404(Product, id=product_id)  
+
+    cart_item = CartItem.objects.filter(cart=cart, product=product).first()
+    if cart_item:
+        cart_item.delete() 
+
+    return redirect('view_cart')
 
 @login_required
 def view_cart(request):
     cart, created = Cart.objects.get_or_create(user=request.user)
-    cart_items = cart.items.all()
-    total = sum(item.product.price * item.quantity for item in cart_items)
-    return render(request, 'cart.html', {'cart_items': cart_items, 'total': total})
+
+    cart_items = CartItem.objects.filter(cart=cart)
+
+    total_original_price = sum(item.product.original_price * item.quantity for item in cart_items)
+    total_discounted_price = sum(item.product.discounted_price * item.quantity for item in cart_items)
+    total_discount = total_original_price - total_discounted_price
+
+    context = {
+        'cart': cart,
+        'cart_items': cart_items,
+        'total_original_price': total_original_price,
+        'total_discounted_price': total_discounted_price,
+        'total_discount': total_discount,
+    }
+    
+    return render(request, 'shop/cart.html', context)
 
 @login_required
 def checkout(request):
