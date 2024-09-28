@@ -1,5 +1,6 @@
 from django.contrib import admin
-from .models import Category, Product, ProductImage, Cart, CartItem, Order, OrderItem
+from django.contrib.auth.admin import UserAdmin
+from .models import Category, Product, ProductImage, Cart, CartItem, Order, OrderItem, NameUser 
 
 class ProductImageInline(admin.TabularInline):
     model = ProductImage
@@ -38,6 +39,13 @@ class OrderAdmin(admin.ModelAdmin):
         return total_count
 
     ordered_product_count.short_description = 'Ordered Product Count'
+    
+class NameUserAdmin(UserAdmin):
+    model = NameUser
+    list_display = ['username', 'email', 'is_staff', 'is_active']
+    fieldsets = UserAdmin.fieldsets + (
+        ('Additional Info', {'fields': ('phone_number',)}),
+    )
 
 admin.site.register(Category)
 admin.site.register(Product, ProductAdmin)
@@ -45,3 +53,4 @@ admin.site.register(Cart, CartAdmin)
 admin.site.register(CartItem)
 admin.site.register(Order, OrderAdmin)
 admin.site.register(OrderItem)
+admin.site.register(NameUser, NameUserAdmin)

@@ -1,0 +1,161 @@
+{% load static %}
+{% load humanize %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Your Cart</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"/>
+    <link rel="stylesheet" href="{% static 'css/cart.css' %}">
+</head>
+<body>
+    <div class="product-container">
+        {% for item in cart_items %}
+            <div class="product-header">
+                <div class="product-image">
+                    <img src="{{ item.product.main_image.url }}" alt="{{ item.product.name }}" height="100px" width="100px">
+                    <select class="cart-dropdown" data-product-id="{{ item.product.id }}">
+                        {% for i in cart_range %}
+                            <option value="{{ i }}" {% if item.quantity == i %}selected{% endif %}>Qty: {{ i }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div>
+                    <h1 class="product-title">{{ item.product.name }}</h1>
+                    <p class="product-color">{{ item.product.color }}</p>
+                    <p class="product-rating">
+                        <span class="stars">
+                            {% for i in rating_range %}
+                                {% if item.product.average_rating >= i %}
+                                    <span class="fa fa-star checked"></span>
+                                {% elif item.product.average_rating >= i|add:"-0.5" %}
+                                    <span class="fa fa-star-half-alt checked"></span>
+                                {% else %}
+                                    <span class="fa fa-star"></span>
+                                {% endif %}
+                            {% endfor %}
+                        </span>· ({{ item.product.number_of_reviews }})
+                    </p>
+                </div>
+            </div>
+            <div class="product-price">
+                <span class="product-discount">{{ item.product.discount_percentage | floatformat:0 }}% </span>
+                <span class="product-original-price">₹{{ item.product.original_price | floatformat:0 | intcomma }}</span>
+                ₹{{ item.product.discounted_price | floatformat:0 | intcomma }}
+            </div>
+            <div class="delivery-options">
+                <p class="delivery-option">
+                    Delivery in 2 days, Tue · <span class="free-delivery">FREE</span>
+                </p>
+            </div>
+            <div class="action-buttons">
+                <a href="{% url 'remove_from_cart' item.product.id %}" class="action-button" style="text-decoration:none;">Remove</a>
+                <a href="#" class="action-button">Buy now</a>
+            </div>
+            <hr class="product-separator">
+        {% endfor %}
+    </div>
+
+     <div class="price-details">
+        <h2>Price Details</h2>
+        <div class="price-row">
+            <span class="price-label">Price ({{ cart_items.count }} items)</span> 
+            <span class="price-value">₹{{ total_original_price | floatformat:0 | intcomma }}</span>
+        </div>
+        <div class="price-row">
+            <span class="price-label">Discount</span>
+            <span class="price-value">₹{{ total_discount | floatformat:0 | intcomma }}</span>
+        </div>
+        <div class="price-row total-amount">
+            <span class="price-label">Total Amount</span>
+            <span class="price-value">₹{{ total_discounted_price | floatformat:0 | intcomma }}</span>
+        </div>
+        <p class="savings">You will save ₹{{ total_discount | floatformat:0 | intcomma }} on this order</p>
+    </div>
+
+    <div class="sticky-cont">
+        <div class="price-container">
+            <p class="mrp-price">₹{{ total_original_price | floatformat:0 | intcomma }}</p>
+            <p class="discount-price">₹{{ total_discounted_price | floatformat:0 | intcomma }}</p>
+        </div>
+        <div class="action-container">
+            <button class="buy-now-btn">Buy All</button>
+        </div>
+    </div>
+    
+    <script>
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+        function updateUI(data) {
+            document.querySelectorAll('.total-amount .price-value').forEach(el => {
+                el.textContent = `₹${parseFloat(data.total_discounted_price).toLocaleString('en-IN', {maximumFractionDigits: 0})}`;
+            });
+
+            const discountElement = document.querySelector('.price-row:nth-child(2) .price-value');
+            if (discountElement) {
+                discountElement.textContent = `₹${parseFloat(data.total_discount).toLocaleString('en-IN', {maximumFractionDigits: 0})}`;
+            }
+
+            const originalPriceElement = document.querySelector('.price-row:first-child .price-value');
+            if (originalPriceElement) {
+                originalPriceElement.textContent = `₹${parseFloat(data.total_original_price).toLocaleString('en-IN', {maximumFractionDigits: 0})}`;
+            }
+
+            const savingsElement = document.querySelector('.savings');
+            if (savingsElement) {
+                savingsElement.textContent = `You will save ₹${parseFloat(data.total_discount).toLocaleString('en-IN', {maximumFractionDigits: 0})} on this order`;
+            }
+
+            const mrpPriceElement = document.querySelector('.sticky-cont .mrp-price');
+            if (mrpPriceElement) {
+                mrpPriceElement.textContent = `₹${parseFloat(data.total_original_price).toLocaleString('en-IN', {maximumFractionDigits: 0})}`;
+            }
+            const discountPriceElement = document.querySelector('.sticky-cont .discount-price');
+            if (discountPriceElement) {
+                discountPriceElement.textContent = `₹${parseFloat(data.total_discounted_price).toLocaleString('en-IN', {maximumFractionDigits: 0})}`;
+            }
+        }
+
+        document.querySelectorAll('.cart-dropdown').forEach(dropdown => {
+            dropdown.addEventListener('change', function () {
+                const productId = this.dataset.productId;
+                const quantity = this.value;
+
+                fetch(`/update-cart/${productId}/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCookie('csrftoken')
+                    },
+                    body: JSON.stringify({ quantity: quantity })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        updateUI(data);
+                    } else {
+                        console.error('Failed to update cart:', data);
+                    }
+                })
+                .catch(error => console.error('Error:', error));
+            });
+        });
+    </script>
+
+</body>
+</html>

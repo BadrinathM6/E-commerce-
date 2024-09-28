@@ -1,6 +1,8 @@
 from django.db import models
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, Group, Permission
 import os
+from django.contrib.auth.models import AbstractUser
+from django.utils import timezone
 
 def image_upload_path(instance, filename):
     return os.path.join('product/' , filename)
@@ -8,6 +10,20 @@ def image_upload_path(instance, filename):
 def category_image_upload_path(instance, filename):
     return os.path.join('category/' , filename)
 
+# User Model
+class NameUser(AbstractUser):
+    email = models.EmailField(unique=True)
+    phone_number = models.CharField(max_length=15, blank=True, null=True)
+    date_joined = models.DateTimeField(default=timezone.now)
+    last_login = models.DateTimeField(null=True, blank=True)
+    is_active = models.BooleanField(default=True)
+    is_staff = models.BooleanField(default=False)
+    groups = models.ManyToManyField(Group, related_name='nameuser_groups')
+    user_permissions = models.ManyToManyField(Permission, related_name='nameuser_permissions')
+   
+    def __str__(self):
+        return self.username
+        
 # Category Model
 class Category(models.Model):
     name = models.CharField(max_length=255)
@@ -68,7 +84,7 @@ class ProductImage(models.Model):
 
 # Cart Model
 class Cart(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    user = models.ForeignKey(NameUser, on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
@@ -87,7 +103,7 @@ class CartItem(models.Model):
 
 # Order Model
 class Order(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    user = models.ForeignKey(NameUser, on_delete=models.CASCADE)
     total_price = models.DecimalField(max_digits=10, decimal_places=2)
     ordered_at = models.DateTimeField(auto_now_add=True)
     status = models.CharField(max_length=255, default='Pending')
@@ -108,7 +124,7 @@ class OrderItem(models.Model):
 
 # search histoy model 
 class SearchHistory(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
+    user = models.ForeignKey(NameUser, on_delete=models.CASCADE, null=True, blank=True)
     query = models.CharField(max_length=255)
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -121,7 +137,7 @@ class Review(models.Model):
     RATING_OPTIONS = [(i, str(i)) for i in range(1, 6)] 
 
     product = models.ForeignKey(Product, related_name='reviews', on_delete=models.CASCADE)
-    user = models.ForeignKey(User, on_delete=models.CASCADE) 
+    user = models.ForeignKey(NameUser, on_delete=models.CASCADE) 
     review = models.TextField(blank=True, null=True)
     rating = models.IntegerField(choices=RATING_OPTIONS)
     created_at = models.DateTimeField(auto_now_add=True)

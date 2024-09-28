@@ -1,0 +1,167 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register Page</title>
+    <link rel="stylesheet" href="{% static 'css/register.css' %}">
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    <style>
+        .alert {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px;
+            border-radius: 5px;
+            color: white;
+            font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 300px;
+            z-index: 1000;
+            animation: slideIn 0.3s ease-out;
+        }
+        .alert-error {
+            background-color: #f44336;
+        }
+        .close-btn {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 20px;
+            cursor: pointer;
+            margin-left: 10px;
+        }
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div id="alert-container"></div>  <!-- Container for alerts -->
+
+    <div class="wrapper">
+        <form method="POST" action="" id="registrationForm" novalidate>
+            {% csrf_token %}
+            <h1>Register</h1>
+
+            <div class="input-box">
+                <input type="text" name="username" placeholder="Username" id="username" required>
+                <i class='bx bxs-user'></i>
+            </div>
+
+            <div class="input-box">
+                <input type="email" name="email" placeholder="Email" id="email" required>
+                <i class='bx bxl-gmail'></i>
+            </div>
+
+            <div class="input-box">
+                <input type="tel" name="phone_number" placeholder="Phone Number" id="phonenumber">
+                <i class='bx bxs-phone'></i>
+            </div>
+
+            <div class="input-box">
+                <input type="password" name="password1" placeholder="Password" required id= "password1">
+                <i class='bx bxs-lock-alt'></i>
+            </div>
+
+            <div class="input-box">
+                <input type="password" name="password2" placeholder="Confirm Password" id="password2" required>
+                <i class='bx bxs-lock-alt'></i>
+            </div>
+
+            <button type="submit" class="btn">Register</button>
+
+            <div class="login-link">
+                <p>Already have an account? <a href="{% url 'login' %}">Login</a></p>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        function showAlert(message, type) {
+            const alertContainer = document.getElementById('alert-container');
+            const alertElement = document.createElement('div');
+            alertElement.className = `alert alert-${type}`;
+            alertElement.innerHTML = `
+                <span>${message}</span>
+                <button class="close-btn">&times;</button>
+            `;
+            alertContainer.appendChild(alertElement);
+
+            const closeButton = alertElement.querySelector('.close-btn');
+            closeButton.addEventListener('click', () => {
+                removeAlert(alertElement);
+            });
+
+            setTimeout(() => removeAlert(alertElement), 3000);
+        }
+
+        function removeAlert(alertElement) {
+            alertElement.style.animation = 'slideIn 0.3s ease-out reverse';
+            setTimeout(() => {
+                if (alertElement.parentNode) {
+                    alertElement.parentNode.removeChild(alertElement);
+                }
+            }, 300);
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            {% if messages %}
+                {% for message in messages %}
+                    showAlert('{{ message }}', '{{ message.tags }}');
+                {% endfor %}
+            {% endif %}
+        });
+        
+        document.getElementById('registrationForm').addEventListener('submit', function(e) {
+            const username = document.getElementById('username').value.trim();
+            const email = document.getElementById('email').value.trim();
+            const phonenumber = document.getElementById('phonenumber').value.trim();
+            const password1 = document.getElementById('password1').value.trim()
+            const password2 = document.getElementById('password2').value.trim()
+
+            if (!username && !email && !phonenumber && !password1 && !password2) {
+                e.preventDefault();
+                showAlert('Please enter all fields', 'error');
+            } else if (!username) {
+                e.preventDefault();
+                showAlert('Please enter your username', 'error');
+            } else if (!email) {
+                e.preventDefault();
+                showAlert('Please enter your email', 'error');
+            }else if (!phonenumber) {
+                e.preventDefault();
+                showAlert('Please enter your phonenumber', 'error');
+            }else if (!password1) {
+                e.preventDefault();
+                showAlert('Please enter your password', 'error');
+            }else if (!password2) {
+                e.preventDefault();
+                showAlert('Please enter your confirm password', 'error');
+            }
+            
+            const phoneRegex = /^\d{10}$/;
+            if (phonenumber && !phoneRegex.test(phonenumber)) {
+                e.preventDefault();
+                showAlert('Phone number must be 10 digits', 'error');
+            }
+            if (password1 && password2 && password1 !== password2) {
+                e.preventDefault();
+                showAlert('Passwords do not match', 'error');
+            }
+        });
+    </script>
+</body>
+</html>

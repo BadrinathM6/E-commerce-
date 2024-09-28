@@ -4,6 +4,32 @@ from django.contrib import messages
 from django.db.models import Q
 from django.http import JsonResponse
 from .models import Category, Product, Cart, CartItem, Order, OrderItem, SearchHistory, Review
+from django.contrib.auth import login, authenticate
+from django.contrib.auth.views import LoginView
+from .forms import NameUserCreationForm, NameAuthenticationForm
+
+def register_view(request):
+    if request.method == 'POST':
+        form = CustomUserCreationForm(request.POST)
+        if form.is_valid():
+            user = form.save()
+            login(request, user)
+            return redirect('home')  
+    else:
+        form = CustomUserCreationForm()
+    return render(request, 'register.html', {'form': form})
+
+class CustomLoginView(LoginView):
+    form_class = NameAuthenticationForm
+    template_name = 'login.html'
+
+    def form_valid(self, form):
+        remember_me = form.cleaned_data.get('remember_me')
+        if not remember_me:
+            self.request.session.set_expiry(0)
+        else:
+            self.request.session.set_expiry(1209600)
+        return super().form_valid(form)
 
 def home(request):
     trending_products = Product.objects.filter(trending_now=True)[:4]
@@ -118,10 +144,8 @@ def search_suggestions(request):
     query = request.GET.get('q', '').strip()
     suggestions = []
 
-    # Allow single-character searches
     if query:
-        # Filter products based on the query
-        suggestions = Product.objects.filter(short_name__icontains=query).values_list('short_name', flat=True)[:10]  # Get top 10 matches
+        suggestions = Product.objects.filter(short_name__icontains=query).values_list('short_name', flat=True)[:10] 
 
     return JsonResponse(list(suggestions), safe=False)
 

@@ -23,7 +23,9 @@
         </div>
         <div class="usershop-icon">
             <i class="fa fa-heart"></i>
-            <i class="fa fa-shopping-cart"></i>
+            <a href="{% url 'view_cart' %}" style="text-decoration: none; color: inherit; ">
+    <i class="fa fa-shopping-cart"></i>
+</a>
             <i class="fa fa-user"></i>
         </div>
     </nav>
@@ -31,8 +33,9 @@
         <ul>
             {% for category in categories %}
             <li>
-                <img class="fieldsetimg" src="{{ category.image.url }}" alt="{{ category.name }}" /> <br />
+                <a href= "{% url 'product_list' %}?category={{ category.id }}"><img class="fieldsetimg" src="{{ category.image.url }}" alt="{{ category.name }}"> <br/>
                 <a class="pick" href="{% url 'product_list' %}?category={{ category.id }}">{{ category.name }}</a>
+                </a>
             </li>
             {% endfor %}
         </ul>
@@ -60,6 +63,7 @@
     <div class="product-container">
     {% if deal_products %}
         <div class="product-large product-card">
+        <a href="{% url 'product_detail' deal_products.0.id %}" style="text-decoration: none; color: inherit; ">
             <img src="{{ deal_products.0.main_image.url }}" alt="{{ deal_products.0.name }}" class="product-image">
             <div class="product-info">
                 <h2 class="product-title">{{ deal_products.0.name }}</h2>
@@ -67,11 +71,13 @@
                     <span class="discount">{{ deal_products.0.discount_percentage | floatformat:0 | intcomma }}% off</span>
                 </p>
             </div>
+       </a> 
         </div>
 
         <div class="product-small-container">
             {% for product in deal_products|slice:"1:" %}
             <div class="product-card">
+                <a href="{% url 'product_detail' product.id %}" style="text-decoration: none; color: inherit; ">
                 <img src="{{ product.main_image.url }}" alt="{{ product.name }}" class="product-image">
                 <div class="product-info">
                     <h2 class="product-title">{{ product.name }}</h2>
@@ -79,6 +85,7 @@
                         <span class="discount">{{ product.discount_percentage | floatformat:0 | intcomma }}% off</span>
                     </p>
                 </div>
+                </a>
             </div>
             {% endfor %}
         </div>

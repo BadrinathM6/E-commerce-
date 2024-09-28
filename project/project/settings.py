@@ -128,6 +128,20 @@ STATICFILES_DIRS = [
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
+LOGIN_URL = '/login/' 
+LOGIN_REDIRECT_URL = 'home'
+
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = 'nathb6382@gmail.com'  # Your email address
+EMAIL_HOST_PASSWORD = 'Badrinath6!'  # Your email password
+DEFAULT_FROM_EMAIL = 'webmaster@localhost'
+
+AUTH_USER_MODEL = 'shop.NameUser'
+
+
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
