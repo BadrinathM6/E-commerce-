@@ -1,27 +1,50 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
+from django.views.generic import CreateView
 from django.views.decorators.http import require_POST
 from django.contrib import messages
 import json
+from django.urls import reverse
+from django.utils.http import urlencode
 from django.db.models import Q
 from django.http import JsonResponse
-from .models import Category, Product, Cart, CartItem, Order, OrderItem, SearchHistory, Review
+from .models import Category, Product, Cart, CartItem, Order, OrderItem, SearchHistory, Review, NameUser
 from django.contrib.auth import login, authenticate
 from django.contrib.auth.views import LoginView
 from .forms import NameUserCreationForm, NameAuthenticationForm
 
-def register_view(request):
-    if request.method == 'POST':
-        form = NameUserCreationForm(request.POST)
-        if form.is_valid():
-            form.save()
-            username = form.cleaned_data.get('username')
-            messages.success(request, f'Account created for {username}!')
-            return redirect('login') 
-    else:
-        form = NameUserCreationForm()
+class CustomRegistrationView(CreateView):
+    form_class = NameUserCreationForm
+    template_name = 'shop/register.html'
 
-    return render(request, 'shop/register.html', {'form': form})
+    def form_valid(self, form):
+        user = form.save()
+        login(self.request, user)
+        
+        # Redirect to registration page with success message and home page redirect
+        params = urlencode({
+            'message': 'You have successfully registered and logged in.',
+            'message_type': 'success',
+            'redirect': reverse('home')  # Assuming 'home' is the name of your home page URL pattern
+        })
+        return redirect(f"{reverse('register')}?{params}")
+
+    def form_invalid(self, form):
+        # Collect all form errors
+        errors = []
+        for field, error_list in form.errors.items():
+            for error in error_list:
+                errors.append(f"{field.capitalize()}: {error}")
+        
+        # Join all errors into a single string
+        error_message = ". ".join(errors)
+        
+        # Redirect to registration page with error message
+        params = urlencode({
+            'message': error_message,
+            'message_type': 'error'
+        })
+        return redirect(f"{reverse('register')}?{params}")
 
 class CustomLoginView(LoginView):
     form_class = NameAuthenticationForm
@@ -42,11 +65,28 @@ class CustomLoginView(LoginView):
             else:
                 self.request.session.set_expiry(1209600) 
         
-            messages.success(self.request, 'You have successfully logged in.')
-            return super().form_valid(form)
+            # Redirect to login page with success message and home page redirect
+            params = urlencode({
+                'message': 'You have successfully logged in.',
+                'message_type': 'success',
+                'redirect': reverse('home')  # Assuming 'home' is the name of your home page URL pattern
+            })
+            return redirect(f"{reverse('login')}?{params}")
         else:
-            messages.error(self.request, 'Invalid username or password.')
-            return self.form_invalid(form)
+            # Redirect to login page with error message
+            params = urlencode({
+                'message': 'Invalid username or password.',
+                'message_type': 'error'
+            })
+            return redirect(f"{reverse('login')}?{params}")
+
+    def form_invalid(self, form):
+        # Redirect to login page with error message
+        params = urlencode({
+            'message': 'Invalid form submission. Please try again.',
+            'message_type': 'error'
+        })
+        return redirect(f"{reverse('login')}?{params}")
         
 def home(request):
     trending_products = Product.objects.filter(trending_now=True)[:4]
@@ -171,6 +211,9 @@ def view_cart(request):
     total_original_price = sum(item.product.original_price * item.quantity for item in cart_items)
     total_discounted_price = sum(item.product.discounted_price * item.quantity for item in cart_items)
     total_discount = total_original_price - total_discounted_price
+    
+    rating_range=range(1,6)
+    cart_range=range(1, 6)
 
     context = {
         'cart': cart,
@@ -178,6 +221,8 @@ def view_cart(request):
         'total_original_price': total_original_price,
         'total_discounted_price': total_discounted_price,
         'total_discount': total_discount,
+        'rating_range': rating_range,
+        'cart_range': cart_range,
     }
     
     return render(request, 'shop/cart.html', context)

@@ -85,21 +85,27 @@
 
     <script>
         function showAlert(message, type) {
-            const alertContainer = document.getElementById('alert-container');
-            const alertElement = document.createElement('div');
-            alertElement.className = `alert alert-${type}`;
-            alertElement.innerHTML = `
-                <span>${message}</span>
-                <button class="close-btn">&times;</button>
-            `;
-            alertContainer.appendChild(alertElement);
+            return new Promise((resolve) => {
+                const alertContainer = document.getElementById('alert-container');
+                const alertElement = document.createElement('div');
+                alertElement.className = `alert alert-${type}`;
+                alertElement.innerHTML = `
+                    <span>${message}</span>
+                    <button class="close-btn">&times;</button>
+                `;
+                alertContainer.appendChild(alertElement);
 
-            const closeButton = alertElement.querySelector('.close-btn');
-            closeButton.addEventListener('click', () => {
-                removeAlert(alertElement);
+                const closeButton = alertElement.querySelector('.close-btn');
+                closeButton.addEventListener('click', () => {
+                    removeAlert(alertElement);
+                    resolve();
+                });
+
+                setTimeout(() => {
+                    removeAlert(alertElement);
+                    resolve();
+                }, 3000);
             });
-
-            setTimeout(() => removeAlert(alertElement), 5000);
         }
 
         function removeAlert(alertElement) {
@@ -111,12 +117,24 @@
             }, 300);
         }
 
-        document.addEventListener('DOMContentLoaded', function() {
-            {% if messages %}
-                {% for message in messages %}
-                    showAlert('{{ message }}', '{{ message.tags }}');
-                {% endfor %}
-            {% endif %}
+        document.addEventListener('DOMContentLoaded', async function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const message = urlParams.get('message');
+            const messageType = urlParams.get('message_type');
+            const redirect = urlParams.get('redirect');
+
+            if (message && messageType) {
+                await showAlert(message, messageType);
+                
+                // Remove the message parameters from the URL
+                const newUrl = window.location.pathname;
+                window.history.replaceState({}, document.title, newUrl);
+
+                // Redirect to home page if login was successful
+                if (messageType === 'success' && redirect) {
+                    window.location.href = redirect;
+                }
+            }
         });
 
         document.getElementById('loginForm').addEventListener('submit', function(e) {
