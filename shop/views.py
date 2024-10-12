@@ -37,7 +37,7 @@ class CustomLoginView(LoginView):
 # Home_view
 def home(request):
     trending_products = Product.objects.filter(trending_now=True)[:4]
-    deal_products = Product.objects.filter(deals_of_the_day=True)[:3]
+    deal_products = Product.objects.filter(deals_of_the_day=True)[:4]
     categories = Category.objects.all()
 
     data = {
@@ -88,7 +88,10 @@ def product_list(request):
         else:
             SearchHistory.objects.create(query=search_query)
 
-    product_data = [{'name': product.name, 'description': product.description} for product in products]
+    product_data = [{'name': product.name,
+                    'description': product.description,
+                    'image': product.main_image.url} 
+                    for product in products]
 
     return JsonResponse({'products': product_data})
 

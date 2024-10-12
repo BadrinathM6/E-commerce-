@@ -23,7 +23,7 @@ const TrendingProducts = () => {
         return <div>Loading...</div>;
     }
     return (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 px-4 py-8">
+        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-4 gap-6 px-4 py-8">
         {trending_products.length ? (
             trending_products.map(trending_product => (
             <a
