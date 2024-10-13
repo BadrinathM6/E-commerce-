@@ -22,6 +22,7 @@ const Navbar = () => {
     const fetchSearchHistory = async () => {
         try {
             const response = await axios.get('http://localhost:8000/search-history/');
+            console.log('searchHistory:', response)
             setSearchHistory(response.data); // Update search history state
         } catch (error) {
             console.error("Error fetching search history:", error);

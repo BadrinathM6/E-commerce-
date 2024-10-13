@@ -116,7 +116,7 @@ class OrderItem(models.Model):
 
 # Search History Model 
 class SearchHistory(models.Model):
-    user = models.ForeignKey(NameUser, on_delete=models.CASCADE)
+    user = models.ForeignKey(NameUser, on_delete=models.CASCADE, null=True, blank=True)
     query = models.CharField(max_length=255)
     created_at = models.DateTimeField(auto_now_add=True)
 

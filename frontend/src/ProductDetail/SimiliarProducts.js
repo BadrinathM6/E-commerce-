@@ -37,26 +37,26 @@ const SimilarProducts = ({ productId }) => {
       `}</style>
       <h2 className="text-xl font-semibold mb-4">Similar Products</h2>
       <div className="relative overflow-hidden">
-        <a href='/product/${productId}'>
         <div className="flex overflow-x-scroll space-x-4 scrollbar-hide no-scrollbar px-4 snap-x snap-mandatory">
           {similarProducts.map((product) => (
-            <div
-              key={product.id}
-              className="w-28 sm:w-[240px] border rounded-lg p-4 shadow-sm bg-white flex-shrink-0"
-            >
-              <img
-                src={`http://localhost:8000${product.image}`}
-                alt={product.name}
-                className="w-full h-auto rounded-lg mb-2"
-              />
-              <h3 className="text-lg font-medium line-clamp-1">{product.name}</h3>
-              <span className="text-green-700 font-semibold text-center">
-                ₹{Number(product.discounted_price).toLocaleString('en-IN', { maximumFractionDigits: 0 })}
-              </span>
-            </div>
+            <a href={`/product/${product.id}`} key={product.id}>
+              <div
+                key={product.id}
+                className="w-28 sm:w-[240px] border rounded-lg p-4 shadow-sm bg-white flex-shrink-0"
+              >
+                <img
+                  src={`http://localhost:8000${product.image}`}
+                  alt={product.name}
+                  className="w-full h-auto rounded-lg mb-2"
+                />
+                <h3 className="text-lg font-medium line-clamp-1">{product.name}</h3>
+                <span className="text-green-700 font-semibold text-center">
+                  ₹{Number(product.discounted_price).toLocaleString('en-IN', { maximumFractionDigits: 0 })}
+                </span>
+              </div>
+            </a>
           ))}
         </div>
-        </a>
       </div>
     </div>
   );

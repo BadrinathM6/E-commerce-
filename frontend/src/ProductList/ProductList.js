@@ -16,12 +16,23 @@ const ProductList = () => {
 
                 // Construct the URL with the category and search query parameters
                 const url = `http://127.0.0.1:8000/product-list/?category=${category}&q=${searchQuery}`;
-
+                
+                console.log("Fetching data from URL: ", url);
                 const response = await axios.get(url);
-                console.log("Response data:", response.data.product_data);
+                console.log("Response data:", response.data);
                 setProductData(response.data.product_data);
+                console.log('product_data :', product_data)
             } catch (error) {
                 console.error("Error fetching product data", error);
+                if (error.response) {
+                    console.error("Error response data:", error.response.data);
+                    console.error("Error response status:", error.response.status);
+                    console.error("Error response headers:", error.response.headers);
+                } else if (error.request) {
+                    console.error("Error request:", error.request);
+                } else {
+                    console.error('Error message:', error.message);
+                }
             } finally {
                 setLoading(false);
             }
@@ -66,7 +77,7 @@ const ProductList = () => {
             <div className="flex flex-wrap justify-center gap-4 p-4">
                 {product_data.length > 0 ? (
                     product_data.map((product) => (
-                        <a href={`/product_detail/${product.id}`} key={product.id} className="no-underline text-inherit">
+                        <a href={`/product/${product.id}`} key={product.id} className="no-underline text-inherit">
                             <div className="flex border border-gray-300 p-4 rounded-lg w-screen hover:shadow-md transition-shadow duration-300">
                                 <div className="w-32 h-32 overflow-hidden mr-4">
                                     <img src={`http://localhost:8000${product.image}`}

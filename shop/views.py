@@ -75,34 +75,42 @@ def product_list(request):
     category_id = request.GET.get('category')
     search_query = request.GET.get('q', '').strip()
 
+    print("Category ID:", category_id)  # Debugging
+    print("Search Query:", search_query)  # Debugging
+
     if category_id:
         products = products.filter(category_id=category_id)
+        print(f"Filtered by category: {category_id}, number of products: {products.count()}")
 
     if search_query:
         products = products.filter(
             Q(name__icontains=search_query) | Q(description__icontains=search_query)
         )
+        print(f"Number of products after search filter: {products.count()}")  # Debugging
 
-        print("Search Query:", search_query)
-        
         # Save search history
         if request.user.is_authenticated:
             SearchHistory.objects.create(user=request.user, query=search_query)
         else:
             SearchHistory.objects.create(query=search_query)
 
-    product_data = [{'id': product.id,
-                    'name': product.name,
-                    'description': product.description,
-                    'image': product.main_image.url,
-                    'average_rating': product.average_rating,
-                    'discounted_price': product.discounted_price,
-                    'original_price': product.original_price,
-                    'discount_percentage': product.discount_percentage,
-                    'number_of_reviews': product.number_of_reviews,} 
-                    for product in products]
+    product_data = [
+        {
+            'id': product.id,
+            'name': product.name,
+            'description': product.description,
+            'image': product.main_image.url,
+            'average_rating': product.average_rating,
+            'discounted_price': product.discounted_price,
+            'original_price': product.original_price,
+            'discount_percentage': product.discount_percentage,
+            'number_of_reviews': product.number_of_reviews,
+        }
+        for product in products
+    ]
 
     return JsonResponse({'product_data': product_data})
+
 
 
 # product_detail_view
@@ -246,10 +254,18 @@ def search_suggestions(request):
 # search_history_view
 # @login_required
 def search_history(request):
-    history = SearchHistory.objects.filter(user=request.user).order_by('-created_at')[:5]
-    history_list = [{'query': entry.query, 'timestamp': entry.created_at} for entry in history]
-
-    return JsonResponse(history_list, safe=False)
+    if request.user.is_authenticated:
+        history = SearchHistory.objects.filter(user=request.user).order_by('-created_at')[:5]
+        history_list = [{'query': entry.query, 'timestamp': entry.created_at} for entry in history]
+        return JsonResponse({
+            'authenticated': True,
+            'history': history_list
+        })
+    else:
+        return JsonResponse({
+            'authenticated': False,
+            'message': 'User is not authenticated'
+        }, status=200)
 
 
 # submit_review_view
