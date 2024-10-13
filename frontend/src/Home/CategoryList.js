@@ -8,6 +8,7 @@ const CategoryList = () => {
     useEffect(() => {
         axios.get('http://127.0.0.1:8000/')
         .then((response) => {
+            console.log(response.data.categories);
             setCategories(response.data.categories);
             setLoading(false);
         })
@@ -38,7 +39,7 @@ const CategoryList = () => {
                 <ul className="flex space-x-6">
                     {categories.map((category, index) => (
                         <li key={category.id ? category.id : `category-${index}`} className="inline-block text-center">
-                            <a href={`/product-list?category=${category.id}`}>
+                            <a href={`http://127.0.0.1:3000/product-list?category=${category.id}`}>
                                 <img className="w-12 h-12 object-cover rounded-full mb-2" 
                                      src={`http://127.0.0.1:8000${category.image_url}`}
                                      alt={category.name} />

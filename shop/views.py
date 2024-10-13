@@ -3,11 +3,10 @@ from django.contrib.auth.decorators import login_required
 from django.views.generic import CreateView
 from django.db.models import Q
 from django.http import JsonResponse
-from .models import Category, Product, Cart, CartItem, Order, OrderItem, SearchHistory, Review, NameUser
+from .models import Category, Product, ProductImage, Cart, CartItem, Order, OrderItem, SearchHistory, Review, NameUser
 from django.contrib.auth import login, authenticate
 from django.contrib.auth.views import LoginView
 from .forms import NameUserCreationForm, NameAuthenticationForm
-from django.db.models.fields.files import FieldFile
 
 # Registration_view
 class CustomRegistrationView(CreateView):
@@ -51,6 +50,7 @@ def home(request):
 
         'trending_products': [
             {
+                'id': product.id,
                 'short_desc': product.short_desc,
                 'short_disc': product.short_disc,
                 'main_image_url': product.main_image.url if product.main_image else None
@@ -58,6 +58,7 @@ def home(request):
         ],
         'deal_products': [
             {
+                'id': product.id,
                 'short_desc': product.short_desc,
                 'short_disc': product.short_disc,
                 'main_image_url': product.main_image.url if product.main_image else None
@@ -72,7 +73,7 @@ def home(request):
 def product_list(request):
     products = Product.objects.all()
     category_id = request.GET.get('category')
-    search_query = request.GET.get('q')
+    search_query = request.GET.get('q', '').strip()
 
     if category_id:
         products = products.filter(category_id=category_id)
@@ -82,23 +83,34 @@ def product_list(request):
             Q(name__icontains=search_query) | Q(description__icontains=search_query)
         )
 
+        print("Search Query:", search_query)
+        
         # Save search history
         if request.user.is_authenticated:
             SearchHistory.objects.create(user=request.user, query=search_query)
         else:
             SearchHistory.objects.create(query=search_query)
 
-    product_data = [{'name': product.name,
+    product_data = [{'id': product.id,
+                    'name': product.name,
                     'description': product.description,
-                    'image': product.main_image.url} 
+                    'image': product.main_image.url,
+                    'average_rating': product.average_rating,
+                    'discounted_price': product.discounted_price,
+                    'original_price': product.original_price,
+                    'discount_percentage': product.discount_percentage,
+                    'number_of_reviews': product.number_of_reviews,} 
                     for product in products]
 
-    return JsonResponse({'products': product_data})
+    return JsonResponse({'product_data': product_data})
 
 
 # product_detail_view
 def product_detail(request, product_id):
     product = get_object_or_404(Product, id=product_id)
+    all_images = product.images.all()
+    thumbnails = all_images.filter(is_thumbnail=True)
+    reviews = Review.objects.filter(product=product).order_by('-created_at')
     similar_products = Product.objects.filter(category=product.category).exclude(id=product.id)
 
     if similar_products.count() < 3:
@@ -112,11 +124,16 @@ def product_detail(request, product_id):
 
     product_data = {
         'name': product.name,
+        'main_image':product.main_image.url if product.main_image else None,
         'description': product.description,
-        'price': product.discounted_price,
-        'similar_products': [{'name': p.name, 'price': p.discounted_price} for p in similar_products],
+        'discount_percentage': product.discount_percentage,
+        'original_price': product.original_price,
+        'discounted_price': product.discounted_price,
+        'reviews': [{'user': review.user.username,'id': review.id, 'rating': review.rating, 'text': review.review, 'rating': review.rating} for review in reviews],
+        'thumbnails': [{'image': img.image.url} for img in thumbnails],
+        'similar_products': [{'image': p.main_image.url, 'id': p.id, 'name': p.name, 'original_price': p.original_price, 'discount_percentage': p.discount_percentage, 'discounted_price': p.discounted_price} for p in similar_products],
         'description_points': description_points,
-        'rating': product.rating,  # Assuming product has a rating field
+        'average_rating': product.average_rating,  # Assuming product has a rating field
     }
 
     return JsonResponse(product_data)
@@ -227,7 +244,7 @@ def search_suggestions(request):
 
 
 # search_history_view
-@login_required
+# @login_required
 def search_history(request):
     history = SearchHistory.objects.filter(user=request.user).order_by('-created_at')[:5]
     history_list = [{'query': entry.query, 'timestamp': entry.created_at} for entry in history]
@@ -236,7 +253,6 @@ def search_history(request):
 
 
 # submit_review_view
-@login_required
 def submit_review(request, product_id):
     product = get_object_or_404(Product, id=product_id)
 

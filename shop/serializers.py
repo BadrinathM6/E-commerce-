@@ -1,11 +1,10 @@
 from rest_framework import serializers
 from .models import NameUser, Category, Product, ProductImage, Cart, CartItem, Order, OrderItem, SearchHistory, Review
-from django.contrib.auth import get_user_model
 
 # User Serializer
 class NameUserSerializer(serializers.ModelSerializer):
     class Meta:
-        model = get_user_model() 
+        model = NameUser 
         fields = ['id', 'username', 'email', 'phone_number', 'date_joined', 'last_login', 'is_active', 'is_staff']
 
 

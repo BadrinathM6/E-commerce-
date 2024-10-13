@@ -42,8 +42,11 @@ INSTALLED_APPS = [
     'django.contrib.humanize',
     'rest_framework',
     'corsheaders',
+    'channels',
     'shop'
 ]
+
+ASGI_APPLICATION = 'project.asgi.application' 
 
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
