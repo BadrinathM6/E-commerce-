@@ -38,7 +38,7 @@ const TrendingProducts = () => {
                     alt={trending_product.name}
                 />
                 <p className="text-gray-800 mt-3 text-sm">{trending_product.short_desc}</p>
-                <h6 className="text-lg font-bold mt-2 text-gray-900">{trending_product.short_disc}</h6>
+                <h6 className="text-lg font-bold mt-2 text-green-600">{trending_product.short_disc}</h6>
                 </div>
             </a>
             ))

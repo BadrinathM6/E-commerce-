@@ -4,9 +4,9 @@ import axios from 'axios';
 const ProductContent = ({ productId, quantity, updateQuantity }) => {
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [isNameExpanded, setIsNameExpanded] = useState(false); // State to toggle full name view
+  const [isNameExpanded, setIsNameExpanded] = useState(false);
 
-  const maxNameLength = 50; // Define the maximum length for the shortened product name
+  const maxNameLength = 50;
 
   useEffect(() => {
     const fetchProductDetails = async () => {
@@ -53,6 +53,9 @@ const ProductContent = ({ productId, quantity, updateQuantity }) => {
     );
   };
 
+  // Split product description into an array of points
+  const descriptionPoints = product.description.split('*').filter(point => point.trim() !== '');
+
   return (
     <div className="flex flex-col p-4 bg-white rounded-lg shadow-md space-y-4 md:space-y-6 lg:space-y-8 md:max-w-4xl mx-auto">
       <h1 className="text-2xl md:text-3xl font-bold text-gray-800">
@@ -60,7 +63,14 @@ const ProductContent = ({ productId, quantity, updateQuantity }) => {
       </h1>
       
       <div className="mt-2">
-        <p className="text-gray-600 text-sm md:text-base lg:text-lg">{product.description}</p>
+        {/* Render product description as a list of bullet points */}
+        <ul className="list-disc list-inside text-gray-600 text-sm md:text-base lg:text-lg space-y-1">
+          {descriptionPoints.map((point, index) => (
+            <li key={index} className="leading-relaxed">
+              {point.trim()}.
+            </li>
+          ))}
+        </ul>
       </div>
       
       <div className="mt-4 flex items-center space-x-2">

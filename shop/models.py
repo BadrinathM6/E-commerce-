@@ -37,7 +37,7 @@ class Product(models.Model):
     discount_percentage = models.DecimalField(max_digits=5, decimal_places=2, null=True)
     original_price = models.DecimalField(max_digits=10, decimal_places=2, null=True)
     main_image = models.ImageField(upload_to=image_upload_path)
-    category = models.ForeignKey(Category, related_name='category', on_delete=models.CASCADE)
+    category = models.ForeignKey(Category, related_name='product', on_delete=models.CASCADE)
     trending_now = models.BooleanField(default=False)
     deals_of_the_day = models.BooleanField(default=False)
     short_desc = models.TextField(null=True)
@@ -70,7 +70,7 @@ class Product(models.Model):
 
 # ProductImage Model (For Thumbnails)
 class ProductImage(models.Model):
-    product = models.ForeignKey(Product, related_name='images', on_delete=models.CASCADE)
+    product = models.ForeignKey(Product, related_name='images', on_delete=models.CASCADE, null=True, blank=True)
     image = models.ImageField(upload_to='products/')
     is_thumbnail = models.BooleanField(default=False)
 

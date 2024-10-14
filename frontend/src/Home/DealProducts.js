@@ -38,7 +38,7 @@ const DealProduct = () => {
                     alt={dealproduct.name}
                 />
                 <p className="text-gray-800 mt-3 text-sm">{dealproduct.short_desc}</p>
-                <h6 className="text-lg font-bold mt-2 text-gray-900">{dealproduct.short_disc}</h6>
+                <h6 className="text-lg font-bold mt-2 text-green-600">{dealproduct.short_disc}</h6>
                 </div>
             </a>
             ))
