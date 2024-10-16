@@ -5,12 +5,21 @@ const ProductContent = ({ productId, quantity, updateQuantity }) => {
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isNameExpanded, setIsNameExpanded] = useState(false);
-
+  
   const maxNameLength = 50;
 
+  // Function to get the CSRF token from cookies
+  const getCSRFToken = () => {
+    const token = document.cookie.split('; ').find(row => row.startsWith('csrftoken='));
+    console.log('CSRF Token:', token ? token.split('=')[1] : 'Not found');
+    return token ? token.split('=')[1] : '';
+  };
   useEffect(() => {
     const fetchProductDetails = async () => {
       try {
+        // Fetch CSRF token when component mounts
+        await axios.get('http://127.0.0.1:8000/get-csrf-token/'); // Ensure this endpoint returns a CSRF token
+        
         const response = await axios.get(`http://127.0.0.1:8000/product/${productId}/`);
         setProduct(response.data);
       } catch (error) {
@@ -36,11 +45,7 @@ const ProductContent = ({ productId, quantity, updateQuantity }) => {
   }
 
   const renderProductName = () => {
-    if (product.name.length <= maxNameLength) {
-      return product.name; 
-    }
-
-    return (
+    return product.name.length <= maxNameLength ? product.name : (
       <>
         {isNameExpanded ? product.name : `${product.name.substring(0, maxNameLength)}...`}
         <button
@@ -53,8 +58,29 @@ const ProductContent = ({ productId, quantity, updateQuantity }) => {
     );
   };
 
-  // Split product description into an array of points
   const descriptionPoints = product.description.split('*').filter(point => point.trim() !== '');
+
+  const handleAddToCart = async () => {
+  try {
+    const csrfToken = getCSRFToken();
+    console.log('Sending CSRF Token:', csrfToken); // Log the CSRF token
+    const response = await axios.post(`http://127.0.0.1:8000/add-to-cart/${productId}/`, {}, {
+      headers: {
+        'X-CSRFToken': csrfToken,
+        'Content-Type': 'application/json',
+      },
+      withCredentials: true, // Ensure cookies are sent with the reques
+    });
+    console.log('Product added to cart', response.data);
+  } catch (error) {
+    console.error('Error adding product to cart:', error);
+    if (error.response) {
+      console.error('Response status:', error.response.status);
+      console.error('Response data:', error.response.data);
+    }
+    alert('Error adding product to cart. Please try again.');
+  }
+};
 
   return (
     <div className="flex flex-col p-4 bg-white rounded-lg shadow-md space-y-4 md:space-y-6 lg:space-y-8 md:max-w-4xl mx-auto">
@@ -63,7 +89,6 @@ const ProductContent = ({ productId, quantity, updateQuantity }) => {
       </h1>
       
       <div className="mt-2">
-        {/* Render product description as a list of bullet points */}
         <ul className="list-disc list-inside text-gray-600 text-sm md:text-base lg:text-lg space-y-1">
           {descriptionPoints.map((point, index) => (
             <li key={index} className="leading-relaxed">
@@ -114,10 +139,15 @@ const ProductContent = ({ productId, quantity, updateQuantity }) => {
       </div>
 
       <div className="mt-4 space-y-2">
-        <button className="w-full px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition">
+        <button
+          onClick={handleAddToCart}
+          className="w-full px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition"
+        >
           Add to Cart
         </button>
-        <button className="w-full px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition">
+        <button
+          className="w-full px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition"
+        >
           Buy Now
         </button>
       </div>

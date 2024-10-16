@@ -3,6 +3,8 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Homepage from './Home/Homepage';
 import ProductList from './ProductList/ProductList';
 import ProductPage from './ProductDetail/ProductPage';
+import Cart from './Cart/Cart';
+import Register from './Login&Register/Register';
 
 const App = () =>{
   return(
@@ -11,6 +13,8 @@ const App = () =>{
         <Route path='/' element={<Homepage/>}/>
         <Route path='/product-list' element={<ProductList/>}/>
         <Route path='/product/:productId' element={<ProductPage/>}/>
+        <Route path='/cart' element={<Cart/>}/>
+        <Route path='/register' element= {<Register/>}/>
       </Routes>
     </Router>
   )

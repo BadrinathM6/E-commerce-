@@ -3,8 +3,8 @@ from django.contrib.auth import views as auth_views
 from django.conf.urls.static import static
 from django.urls import path
 from .views import (
-    home, product_list, product_detail, add_to_cart, remove_from_cart, view_cart, checkout, order_confirmation, submit_review, CustomRegistrationView, CustomLoginView, 
-    search, search_suggestions, search_history, submit_review
+    home, product_list, product_detail, add_to_cart, remove_from_cart, update_cart, view_cart, checkout, order_confirmation, submit_review, CustomRegistrationView, CustomLoginView, 
+    search, search_suggestions, search_history, submit_review, get_csrf_token, 
 
 )
 
@@ -16,6 +16,7 @@ urlpatterns = [
     path('product-list/', product_list, name='product_list'),
     path('add-to-cart/<int:product_id>/', add_to_cart, name='add_to_cart'),
     path('remove-from-cart/<int:product_id>/', remove_from_cart, name='remove_from_cart'),
+    path('update-cart/<int:product_id>/', update_cart, name='update_cart'),
     path('cart/', view_cart, name='view_cart'),
     path('checkout/', checkout, name='checkout'),
     path('order-confirmation/<int:order_id>/', order_confirmation, name='order_confirmation'),
@@ -29,6 +30,7 @@ urlpatterns = [
     path('register/', CustomRegistrationView.as_view(), name='register'),
     path('login/', CustomLoginView.as_view(), name='login'),
     path('logout/', auth_views.LogoutView.as_view(), name='logout'),
+    path('get-csrf-token/', get_csrf_token, name='get_csrf_token')
 
 ]
 

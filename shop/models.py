@@ -79,7 +79,7 @@ class ProductImage(models.Model):
 
 # Cart Model
 class Cart(models.Model):
-    user = models.ForeignKey(NameUser, on_delete=models.CASCADE)
+    user = models.ForeignKey(NameUser, on_delete=models.CASCADE, null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
