@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import axios from 'axios';
+import axiosInstance from '../utils/axiosConfig';
 
 const ReviewForm = ({ productId, onReviewSubmitted }) => {
   const [text, setText] = useState('');
@@ -11,7 +11,7 @@ const ReviewForm = ({ productId, onReviewSubmitted }) => {
     setLoading(true);
 
     try {
-      await axios.post(`http://127.0.0.1:8000/product/${productId}/submit-review/`, {
+      await axiosInstance.post(`/product/${productId}/submit-review/`, {
         text,
         rating,
       });

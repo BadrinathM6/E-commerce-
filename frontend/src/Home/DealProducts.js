@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import axiosInstance from '../utils/axiosConfig';
 
 const DealProduct = () => {
     const [dealProducts, setDealProducts] = useState([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        axios.get('http://127.0.0.1:8000/')
+        axiosInstance.get('')
             .then((response) => {
                 console.log("Response data:", response.data.deal_products);
                 setDealProducts(response.data.deal_products);
@@ -34,7 +34,7 @@ const DealProduct = () => {
                 <div className="p-4">
                 <img
                     className="w-full h-50 object-cover rounded-lg"
-                    src={`http://localhost:8000${dealproduct.main_image_url}`}
+                    src={`http://localhost:8000${dealproduct.main_image}`}
                     alt={dealproduct.name}
                 />
                 <p className="text-gray-800 mt-3 text-sm">{dealproduct.short_desc}</p>

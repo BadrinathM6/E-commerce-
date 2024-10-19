@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
+import axiosInstance from '../utils/axiosConfig'
 
 const ProductImages = ({ productId }) => {
     const [productData, setProductData] = useState(null);
@@ -7,7 +7,7 @@ const ProductImages = ({ productId }) => {
     const [mainImage, setMainImage] = useState('');
 
     useEffect(() => {
-        axios.get(`http://127.0.0.1:8000/product/${productId}/`)
+        axiosInstance.get(`/product/${productId}/`)
             .then((response) => {
                 console.log("Response data:", response.data);
                 setProductData(response.data);

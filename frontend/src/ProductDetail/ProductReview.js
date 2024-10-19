@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
+import axiosInstance from '../utils/axiosConfig'
 
 const Review = ({ productId }) => {
   const [reviews, setReviews] = useState([]);
@@ -8,7 +8,7 @@ const Review = ({ productId }) => {
   useEffect(() => {
     const fetchReviews = async () => {
       try {
-        const response = await axios.get(`http://127.0.0.1:8000/product/${productId}/`);
+        const response = await axiosInstance.get(`/product/${productId}/`);
         setReviews(response.data.reviews);
       } catch (error) {
         console.error("Error fetching reviews:", error);

@@ -1,340 +1,237 @@
-import json
 import logging
 from django.shortcuts import get_object_or_404
-from django.contrib.auth.decorators import login_required
-from django.views.generic import CreateView
 from django.db.models import Q
 from django.http import JsonResponse
-from .models import Category, Product, ProductImage, Cart, CartItem, Order, OrderItem, SearchHistory, Review, NameUser
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework import status
+from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.response import Response
+from .models import Category, Product, Cart, CartItem, SearchHistory, Review, Order, OrderItem
+from .serializers import NameUserSerializer, ProductSerializer, CartItemSerializer, CategorySerializer
 from django.contrib.auth import login, authenticate
-from django.contrib.auth.views import LoginView
-from .forms import NameUserCreationForm, NameAuthenticationForm
-from django.views.decorators.csrf import get_token
-from django.utils.decorators import method_decorator
-from django.views.decorators.csrf import csrf_exempt, csrf_protect
-from django.views.decorators.http import require_GET, require_POST
+from rest_framework_simplejwt.tokens import RefreshToken
+
 
 logger = logging.getLogger(__name__)
 
-@require_GET
-def get_csrf_token(request):
-    csrf_token = get_token(request)
-    return JsonResponse({'csrfToken': csrf_token})
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def register_view(request):
+    logger.info(f"Received registration data: {request.data}")
+    
+    serializer = NameUserSerializer(data=request.data)
+    if serializer.is_valid():
+        serializer.save()
+        logger.info("User registered successfully")
+        return Response({"message": "Registration successful"}, status=status.HTTP_201_CREATED)
+    else:
+        logger.error(f"Registration failed. Errors: {serializer.errors}")
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-# Registration_view
-@method_decorator(csrf_protect, name='dispatch')
-class CustomRegistrationView(CreateView):
-    def post(self, request, *args, **kwargs):
-        logger.info(f"Received data: {request.body}")
-        try:
-            data = json.loads(request.body)
-            form = NameUserCreationForm(data)
-            
-            if form.is_valid():
-                user = form.save()
-                return JsonResponse({'message': 'You have successfully registered.', 'status': 'success'}, status=201)
-            
-            errors = {field: error_list for field, error_list in form.errors.items()}
-            return JsonResponse({'message': 'Registration failed.', 'errors': errors, 'status': 'error'}, status=400)
-        except json.JSONDecodeError:
-            return JsonResponse({'message': 'Invalid JSON data', 'status': 'error'}, status=400)
-# Login_view
-class CustomLoginView(LoginView):
-    form_class = NameAuthenticationForm
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def login_view(request):
+    username = request.data.get('username')
+    password = request.data.get('password')
 
-    def form_valid(self, form):
-        login(self.request, form.get_user())
-        return JsonResponse({'message': 'You have successfully logged in.', 'status': 'success'}, status=200)
+    print(f"Attempting login for username: {username}")
 
-    def form_invalid(self, form):
-        return JsonResponse({'message': 'Invalid login credentials.', 'status': 'error'}, status=400)
+    if not username or not password:
+        return Response({"message": "Username and password required"}, status=status.HTTP_400_BAD_REQUEST)
 
+    user = authenticate(request, username=username, password=password)
+    
+    if user is not None:
+        print(f"Authentication successful for user: {user.username}")
+        if not user.is_active:
+            print(f"User {user.username} is not active")
+            return Response({"message": "User account is not active."}, status=status.HTTP_401_UNAUTHORIZED)
+        
+        refresh = RefreshToken.for_user(user)
+        return Response({
+            'refresh': str(refresh),
+            'access': str(refresh.access_token),
+            'message': "Login successful!"
+        }, status=status.HTTP_200_OK)
+    else:
+        print(f"Authentication failed for username: {username}")
+        return Response({"message": "Invalid credentials"}, status=status.HTTP_401_UNAUTHORIZED)
 
-# Home_view
+@api_view(['GET'])
 def home(request):
     trending_products = Product.objects.filter(trending_now=True)[:4]
     deal_products = Product.objects.filter(deals_of_the_day=True)[:4]
     categories = Category.objects.all()
 
     data = {
-        'categories': [
-             {
-                'id': category.id,
-                'name': category.name,
-                'image_url': category.image.url if category.image else None  # Send image URL
-             } for category in categories
-        ],
-
-        'trending_products': [
-            {
-                'id': product.id,
-                'short_desc': product.short_desc,
-                'short_disc': product.short_disc,
-                'main_image_url': product.main_image.url if product.main_image else None
-            } for product in trending_products
-        ],
-        'deal_products': [
-            {
-                'id': product.id,
-                'short_desc': product.short_desc,
-                'short_disc': product.short_disc,
-                'main_image_url': product.main_image.url if product.main_image else None
-            } for product in deal_products
-        ],
+        'categories': CategorySerializer(categories, many=True, context={'request': request}).data,
+        'trending_products': ProductSerializer(trending_products, many=True).data,
+        'deal_products': ProductSerializer(deal_products, many=True).data,
     }
 
-    return JsonResponse(data)
+    return Response(data)
 
-
-# product_list_view
+@api_view(['GET'])
 def product_list(request):
     products = Product.objects.all()
     category_id = request.GET.get('category')
     search_query = request.GET.get('q', '').strip()
 
-    print("Category ID:", category_id)  # Debugging
-    print("Search Query:", search_query)  # Debugging
-
     if category_id:
         products = products.filter(category_id=category_id)
-        print(f"Filtered by category: {category_id}, number of products: {products.count()}")
 
     if search_query:
         products = products.filter(
             Q(name__icontains=search_query) | Q(description__icontains=search_query)
         )
-        print(f"Number of products after search filter: {products.count()}")  # Debugging
 
-        # Save search history
         if request.user.is_authenticated:
             SearchHistory.objects.create(user=request.user, query=search_query)
         else:
             SearchHistory.objects.create(query=search_query)
 
-    product_data = [
-        {
-            'id': product.id,
-            'name': product.name,
-            'description': product.description,
-            'image': product.main_image.url,
-            'average_rating': product.average_rating,
-            'discounted_price': product.discounted_price,
-            'original_price': product.original_price,
-            'discount_percentage': product.discount_percentage,
-            'number_of_reviews': product.number_of_reviews,
-        }
-        for product in products
-    ]
+    product_data = ProductSerializer(products, many=True).data
 
-    return JsonResponse({'product_data': product_data})
+    return Response({'product_data': product_data})
 
-
-
-# product_detail_view
+@api_view(['GET'])
 def product_detail(request, product_id):
+    # Fetch the product or return 404
     product = get_object_or_404(Product, id=product_id)
+    
+    # Get related images and reviews
     all_images = product.images.all()
     thumbnails = all_images.filter(is_thumbnail=True)
     reviews = Review.objects.filter(product=product).order_by('-created_at')
+    
+    # Fetch similar products (excluding the current one)
     similar_products = Product.objects.filter(category=product.category).exclude(id=product.id)
-
+    
+    # Fill remaining similar products if less than 3 are found
     if similar_products.count() < 3:
         remaining_count = 3 - similar_products.count()
         other_products = Product.objects.exclude(Q(category=product.category) | Q(id=product.id))[:remaining_count]
         similar_products = list(similar_products) + list(other_products)
     else:
         similar_products = similar_products[:7]
-
-    description_points = product.description.split("*")
-
-    product_data = {
-        'name': product.name,
-        'main_image':product.main_image.url if product.main_image else None,
-        'description': product.description,
-        'discount_percentage': product.discount_percentage,
-        'original_price': product.original_price,
-        'discounted_price': product.discounted_price,
-        'reviews': [{'user': review.user.username,'id': review.id, 'rating': review.rating, 'text': review.review, 'rating': review.rating} for review in reviews],
-        'thumbnails': [{'image': img.image.url} for img in thumbnails],
-        'similar_products': [{'image': p.main_image.url, 'id': p.id, 'name': p.name, 'original_price': p.original_price, 'discount_percentage': p.discount_percentage, 'discounted_price': p.discounted_price} for p in similar_products],
-        'description_points': description_points,
-        'average_rating': product.average_rating,  # Assuming product has a rating field
-    }
-
-    return JsonResponse(product_data)
     
+    # Use serializer for the main product and similar products
+    product_serializer = ProductSerializer(product)
+    similar_products_serializer = ProductSerializer(similar_products, many=True)
+    
+    # Add thumbnails and reviews to the product data
+    product_data = product_serializer.data
+    product_data['thumbnails'] = [{'image': img.image.url} for img in thumbnails]
+    product_data['reviews'] = [{'user': review.user.username, 'id': review.id, 'rating': review.rating, 'text': review.review} for review in reviews]
+    product_data['similar_products'] = similar_products_serializer.data
+    product_data['description_points'] = product.description.split("*")
 
-# Add_to_cart_view
-# @login_required
-@require_POST
-@csrf_exempt
+    # Return the final product data as response
+    return Response(product_data)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
 def add_to_cart(request, product_id):
-    if request.method == 'POST':
-        product = get_object_or_404(Product, id=product_id)
-        if request.user.is_authenticated:
-        # Get or create the cart for the authenticated user
-          cart, created = Cart.objects.get_or_create(user=request.user)
-        else:
-        # Create a guest cart using session
-          cart, created = Cart.objects.get_or_create(user=None)
+    logger.info(f"Add to cart view accessed for product_id: {product_id}")
+    product = get_object_or_404(Product, id=product_id)
+    cart, created = Cart.objects.get_or_create(user=request.user)
+    cart_item, item_created = CartItem.objects.get_or_create(cart=cart, product=product)
 
-        cart_item, item_created = CartItem.objects.get_or_create(cart=cart, product=product)
+    if not item_created:
+        cart_item.quantity += 1
+        cart_item.save()
 
-        if not item_created:
-            cart_item.quantity += 1
-            cart_item.save()
+    logger.info(f"Product {product.name} added to cart for user {request.user.username}")
+    return Response({'message': f"{product.name} added to cart.", 'status': 'success'})
 
-        return JsonResponse({'message': f"{product.name} added to cart.", 'success': True})
-
-    return JsonResponse({'message': 'Invalid request method.', 'success': False})
-
-
-# view_cart_view
-# @login_required
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
 def view_cart(request):
-    # Check if the user is authenticated
-    if request.user.is_authenticated:
-        # Get or create the cart for the authenticated user
-        cart, created = Cart.objects.get_or_create(user=request.user)
-    else:
-        # Create a guest cart using session
-        cart, created = Cart.objects.get_or_create(user=None)
-    
-    # Fetch cart items
+    logger.info(f"View cart accessed for user {request.user.username}")
+    cart, created = Cart.objects.get_or_create(user=request.user)
     cart_items = CartItem.objects.filter(cart=cart)
 
-    # Initialize total values
-    total_original_price = 0
-    total_discounted_price = 0
-    total_discount = 0
-
-    # Prepare the cart data
-    cart_data = []
-    for item in cart_items:
-        product = item.product
-        original_price = product.original_price
-        discount_percentage = product.discount_percentage
-        discounted_price = original_price * (1 - discount_percentage / 100)
-        
-        # Update totals
-        total_original_price += original_price * item.quantity
-        total_discounted_price += discounted_price * item.quantity
-        total_discount += (original_price - discounted_price) * item.quantity
-        
-        # Add product details to cart data
-        cart_data.append({
-            'product': {
-                'id': product.id,
-                'name': product.name,
-                'main_image': {'url': product.main_image.url},  # Assuming your product has an image field
-                'original_price': original_price,
-                'discounted_price': discounted_price,
-                'discount_percentage': discount_percentage,
-                'average_rating': product.average_rating,
-                'number_of_reviews': product.number_of_reviews,
-            },
-            'quantity': item.quantity
-        })
+    serialized_items = CartItemSerializer(cart_items, many=True).data
     
-    # Return the full cart data along with totals
-    return JsonResponse({
-        'cart_items': cart_data,
+    total_original_price = sum(item.product.original_price * item.quantity for item in cart_items)
+    total_discounted_price = sum(item.product.discounted_price * item.quantity for item in cart_items)
+    total_discount = total_original_price - total_discounted_price
+
+    return Response({
+        'cart_items': serialized_items,
         'total_original_price': total_original_price,
         'total_discounted_price': total_discounted_price,
-        'total_discount': total_discount
+        'total_discount': total_discount,
+        'status': 'success'
     })
-
-
-# remove_cart_views
-# @login_required
-@require_POST
-@csrf_exempt
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
 def remove_from_cart(request, product_id):
-    cart = get_object_or_404(Cart, user=None)
+    logger.info(f"Remove from cart view accessed for product_id: {product_id}")
+    cart = get_object_or_404(Cart, user=request.user)
     product = get_object_or_404(Product, id=product_id)
 
     cart_item = CartItem.objects.filter(cart=cart, product=product).first()
     if cart_item:
         cart_item.delete()
+        logger.info(f"Product {product.name} removed from cart for user {request.user.username}")
+        return Response({'message': f"{product.name} removed from cart.", 'status': 'success'})
+    else:
+        logger.warning(f"Product {product_id} not found in cart for user {request.user.username}")
+        return Response({'message': 'Product not found in cart.', 'status': 'error'}, status=404)
 
-    return JsonResponse({'message': f"{product.name} removed from cart.", 'success': True})
-
-@require_POST
-@csrf_exempt
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
 def update_cart(request, product_id):
-    if request.method == 'POST':
-        try:
-            # Parse the JSON body
-            data = json.loads(request.body)
-            quantity = data.get('quantity')
+    logger.info(f"Update cart view accessed for product_id: {product_id}")
+    try:
+        data = request.data
+        quantity = data.get('quantity')
 
-            # Validate the quantity: it must be a positive integer
-            if quantity is None or not isinstance(quantity, int) or quantity <= 0:
-                return JsonResponse({'error': 'Invalid quantity, must be a positive integer'}, status=400)
+        cart = get_object_or_404(Cart, user=request.user)
+        cart_items = CartItem.objects.filter(cart=cart)
+        product = get_object_or_404(Product, id=product_id)
 
-            # Get the cart from session (default to an empty dict if not present)
-            cart = request.session.get('cart', {})
+        # Calculate total prices before changes
+        total_original_price = sum(item.product.original_price * item.quantity for item in cart_items)
+        total_discounted_price = sum(item.product.discounted_price * item.quantity for item in cart_items)
+        total_discount = total_original_price - total_discounted_price
 
-            # Debug: Print the cart contents and product_id for inspection
-            print("Cart contents:", cart)
-            print("Requested product ID:", product_id)
+        cart_item = CartItem.objects.filter(cart=cart, product=product).first()
 
-            # Ensure product_id is treated as a string for dictionary key matching
-            product_id_str = str(product_id)
-
-            # Check if the product_id exists in the cart
-            if product_id_str in cart:
-                # Fetch the product to ensure it exists
-                try:
-                    product = Product.objects.get(id=product_id)
-                except Product.DoesNotExist:
-                    return JsonResponse({'error': 'Product not found'}, status=404)
-
-                # Update the quantity in the cart
-                cart[product_id_str]['quantity'] = quantity
-
-                # Calculate prices for this product
-                discounted_price = product.discounted_price * quantity
-                original_price = product.original_price * quantity
-
-                # Recalculate the total prices and discounts for the entire cart
-                total_discounted_price = sum(
-                    item['quantity'] * Product.objects.get(id=pid).discounted_price
-                    for pid, item in cart.items() if 'quantity' in item
-                )
-                total_discount = sum(
-                    (Product.objects.get(id=pid).original_price - Product.objects.get(id=pid).discounted_price) * item['quantity']
-                    for pid, item in cart.items() if 'quantity' in item
-                )
-
-                # Save updated cart to session
-                request.session['cart'] = cart
-                request.session.modified = True
-
-                # Return the updated information as a JSON response
-                return JsonResponse({
-                    'discounted_price': discounted_price,
-                    'original_price': original_price,
+        if cart_item:
+            if quantity is not None and quantity > 0:
+                # Update quantity and save
+                cart_item.quantity = quantity
+                cart_item.save()
+                
+                # Recalculate total prices after the update
+                total_discounted_price = sum(item.product.discounted_price * item.quantity for item in cart_items)
+                total_discount = total_original_price - total_discounted_price
+                
+                logger.info(f"Cart updated for user {request.user.username}: {product.name} quantity set to {quantity}")
+                return Response({
+                    'message': 'Cart updated successfully',
+                    'status': 'success',
+                    'discounted_price': cart_item.product.discounted_price * quantity,  # Return the updated price based on quantity
                     'total_discounted_price': total_discounted_price,
-                    'total_discount': total_discount,
+                    'total_discount': total_discount
                 })
             else:
-                print("Product not found in cart")
-                return JsonResponse({'error': 'Product not in cart'}, status=404)
+                # Remove item from cart if quantity is zero or less
+                cart_item.delete()
+                logger.info(f"Product {product.name} removed from cart for user {request.user.username} due to quantity 0")
+                return Response({'message': 'Product removed from cart', 'status': 'success'})
+        else:
+            logger.warning(f"Product {product_id} not found in cart for user {request.user.username}")
+            return Response({'message': 'Product not found in cart.', 'status': 'error'}, status=404)
 
-        except json.JSONDecodeError:
-            return JsonResponse({'error': 'Invalid JSON'}, status=400)
-        except Exception as e:
-            print("Error occurred:", str(e))  # Print the error for debugging
-            return JsonResponse({'error': str(e)}, status=500)
-
-    return JsonResponse({'error': 'Invalid request method'}, status=400)
-
-
+    except Exception as e:
+        logger.error(f"Error updating cart: {str(e)}")
+        return Response({'message': 'An error occurred while updating the cart.', 'status': 'error'}, status=500)
                 
-
 # checkout_view
-@login_required
 def checkout(request):
     cart, created = Cart.objects.get_or_create(user=request.user)
     cart_items = cart.items.all()
@@ -354,7 +251,6 @@ def checkout(request):
 
 
 # order_confirmation_view
-@login_required
 def order_confirmation(request, order_id):
     order = get_object_or_404(Order, id=order_id, user=request.user)
 

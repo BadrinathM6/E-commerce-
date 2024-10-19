@@ -1,16 +1,16 @@
 import React, {useEffect, useState} from 'react';
-import axios from 'axios';
 import Navbar from './Navbar';
 import CategoryList from './CategoryList';
 import DealProducts from './DealProducts';
 import Timer from './Timer';
 import TrendingProducts from './TrendingProducts';
+import axiosInstance from '../utils/axiosConfig';
 
 const Homepage = () =>{
     const [data, setData] = useState(null);
 
   useEffect(() => {
-    axios.get("http://127.0.0.1:8000/")
+    axiosInstance.get('')
       .then(response => {
         console.log(response.data); // Check data in the console
         setData(response.data); // Save the data into state

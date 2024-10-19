@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
+import axiosInstance from '../utils/axiosConfig';
 import Logo from '../images/Logo/fixed-removebg-preview.png';
 import Searchicon from '../images/Logo/search.png';
 
 const Navbar = () => {
+    const navigate = useNavigate();
     const [searchResults, setSearchResults] = useState([]);
     const [searchHistory, setSearchHistory] = useState([]);
     const [searchQuery, setSearchQuery] = useState('');
@@ -11,7 +13,7 @@ const Navbar = () => {
     // Function to fetch search suggestions
     const fetchSearchSuggestions = async (query) => {
         try {
-            const response = await axios.get(`http://localhost:8000/search-suggestions/?q=${query}`);
+            const response = await axiosInstance.get(`/search-suggestions/?q=${query}`);
             setSearchResults(response.data); // Update search results state
         } catch (error) {
             console.error("Error fetching search suggestions:", error);
@@ -21,7 +23,7 @@ const Navbar = () => {
     // Function to fetch search history
     const fetchSearchHistory = async () => {
         try {
-            const response = await axios.get('http://localhost:8000/search-history/');
+            const response = await axiosInstance.get('/search-history/');
             console.log('searchHistory:', response)
             setSearchHistory(response.data); // Update search history state
         } catch (error) {
@@ -159,7 +161,7 @@ const Navbar = () => {
             {/* User and Cart Icons */}
             <div className="usershop-icon flex items-center space-x-4">
                 <i className="fa fa-heart text-lg"></i>
-                <i className="fa fa-shopping-cart text-lg"></i>
+                <i className="fa fa-shopping-cart text-lg cursor-pointer" onClick={() => navigate('/cart/')}></i>
                 <i className="fa fa-user text-lg"></i>
             </div>
         </nav>

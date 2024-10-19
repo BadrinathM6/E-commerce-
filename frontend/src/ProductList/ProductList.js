@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import axiosInstance from '../utils/axiosConfig';
 import Navbar from '../Home/Navbar';
 
 const ProductList = () => {
@@ -14,14 +14,12 @@ const ProductList = () => {
                 const category = urlParams.get('category') || '';
                 const searchQuery = urlParams.get('q') || '';
 
-                // Construct the URL with the category and search query parameters
-                const url = `http://127.0.0.1:8000/product-list/?category=${category}&q=${searchQuery}`;
+                const url = `/product-list/?category=${category}&q=${searchQuery}`;
                 
                 console.log("Fetching data from URL: ", url);
-                const response = await axios.get(url);
+                const response = await axiosInstance.get(url);
                 console.log("Response data:", response.data);
                 setProductData(response.data.product_data);
-                console.log('product_data :', product_data)
             } catch (error) {
                 console.error("Error fetching product data", error);
                 if (error.response) {
@@ -51,7 +49,7 @@ const ProductList = () => {
         return () => {
             window.removeEventListener('popstate', handleURLChange);
         };
-    }, []); // Only run once on mount
+    }, []); // Only run once on mount, no dependencies needed here
 
     const ratingStars = (averageRating) => {
         const stars = [];
@@ -80,7 +78,7 @@ const ProductList = () => {
                         <a href={`/product/${product.id}`} key={product.id} className="no-underline text-inherit">
                             <div className="flex border border-gray-300 p-4 rounded-lg w-screen hover:shadow-md transition-shadow duration-300">
                                 <div className="w-32 h-32 overflow-hidden mr-4">
-                                    <img src={`http://localhost:8000${product.image}`}
+                                    <img src={`http://localhost:8000${product.main_image}`}
                                         alt={product.name}
                                         className="w-full h-full object-cover"
                                     />

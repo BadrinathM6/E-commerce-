@@ -1,19 +1,61 @@
 from rest_framework import serializers
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
 from .models import NameUser, Category, Product, ProductImage, Cart, CartItem, Order, OrderItem, SearchHistory, Review
 
 # User Serializer
+
+NameUser = get_user_model()
+
 class NameUserSerializer(serializers.ModelSerializer):
+    password = serializers.CharField(write_only=True)
+    password2 = serializers.CharField(write_only=True, required=True)
+
     class Meta:
         model = NameUser
-        fields = ['id', 'username', 'email', 'phone_number', 'date_joined', 'last_login', 'is_active', 'is_staff']
+        fields = ['id', 'username', 'email', 'phone_number', 'password', 'password2']
+        extra_kwargs = {
+            'password': {'write_only': True},
+        }
+
+    def validate(self, attrs):
+        if attrs['password'] != attrs['password2']:
+            raise serializers.ValidationError({"password": "Password fields didn't match."})
+        return attrs
+
+    def create(self, validated_data):
+        validated_data.pop('password2')
+        user = NameUser.objects.create_user(**validated_data)
+        return user
+
+    def validate_username(self, value):
+        if NameUser.objects.filter(username=value).exists():
+            raise serializers.ValidationError("This username is already taken.")
+        return value
+
+    def validate_email(self, value):
+        if NameUser.objects.filter(email=value).exists():
+            raise serializers.ValidationError("This email is already in use.")
+        return value
+    
+    def validate_phone_number(self, value):
+        if value and NameUser.objects.filter(phone_number=value).exists():
+            raise serializers.ValidationError("This phone number is already in use.")
+        return value
+
 
 
 # Category Serializer
 class CategorySerializer(serializers.ModelSerializer):
+    image_url = serializers.SerializerMethodField()
+
     class Meta:
         model = Category
         fields = ['id', 'name', 'image_url', 'slug']
+
+    def get_image_url(self, obj):
+        if obj.image:
+            return self.context['request'].build_absolute_uri(obj.image.url)
+        return None
 
 
 # Product Serializer
@@ -21,6 +63,7 @@ class ProductSerializer(serializers.ModelSerializer):
     discounted_price = serializers.ReadOnlyField() 
     average_rating = serializers.ReadOnlyField()
     number_of_reviews = serializers.ReadOnlyField()
+    main_image = serializers.SerializerMethodField()
 
     class Meta:
         model = Product
@@ -29,6 +72,11 @@ class ProductSerializer(serializers.ModelSerializer):
             'category', 'trending_now', 'deals_of_the_day', 'short_desc', 'short_disc', 'short_name', 
             'stock', 'created_at', 'updated_at', 'discounted_price', 'average_rating', 'number_of_reviews'
         ]
+
+    def get_main_image(self, obj):
+        if obj.main_image:
+            return obj.main_image.url
+        return None
 
 
 # Product Image Serializer (For Thumbnails)

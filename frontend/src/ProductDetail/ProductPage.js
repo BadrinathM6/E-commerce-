@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
 import { useParams } from 'react-router-dom';
 import ProductContent from './ProductContent';
 import ProductImages from './ProductImages';
 import ProductReview from './ProductReview';
 import ProductReviewForm from './ProductReviewform'; // Corrected to match the filename
 import SimilarProducts from './SimiliarProducts'; // Corrected the spelling
+import axiosInstance from '../utils/axiosConfig';
 
 const ProductPage = () => {
   const { productId } = useParams(); // Correctly call useParams to get productId
@@ -25,7 +25,7 @@ const ProductPage = () => {
       try {
         if (productId) {
           console.log("Product ID:", productId);
-          const response = await axios.get(`http://127.0.0.1:8000/product/${productId}/`);
+          const response = await axiosInstance.get(`/product/${productId}/`);
           console.log("API Response:", response.data);
           const productData = response.data;
 

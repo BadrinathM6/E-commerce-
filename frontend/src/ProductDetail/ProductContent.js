@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
+import axiosInstance from '../utils/axiosConfig';
 
 const ProductContent = ({ productId, quantity, updateQuantity }) => {
   const [product, setProduct] = useState(null);
@@ -8,19 +8,10 @@ const ProductContent = ({ productId, quantity, updateQuantity }) => {
   
   const maxNameLength = 50;
 
-  // Function to get the CSRF token from cookies
-  const getCSRFToken = () => {
-    const token = document.cookie.split('; ').find(row => row.startsWith('csrftoken='));
-    console.log('CSRF Token:', token ? token.split('=')[1] : 'Not found');
-    return token ? token.split('=')[1] : '';
-  };
   useEffect(() => {
     const fetchProductDetails = async () => {
       try {
-        // Fetch CSRF token when component mounts
-        await axios.get('http://127.0.0.1:8000/get-csrf-token/'); // Ensure this endpoint returns a CSRF token
-        
-        const response = await axios.get(`http://127.0.0.1:8000/product/${productId}/`);
+        const response = await axiosInstance.get(`/product/${productId}/`);
         setProduct(response.data);
       } catch (error) {
         console.error("Error fetching product details:", error);
@@ -62,15 +53,7 @@ const ProductContent = ({ productId, quantity, updateQuantity }) => {
 
   const handleAddToCart = async () => {
   try {
-    const csrfToken = getCSRFToken();
-    console.log('Sending CSRF Token:', csrfToken); // Log the CSRF token
-    const response = await axios.post(`http://127.0.0.1:8000/add-to-cart/${productId}/`, {}, {
-      headers: {
-        'X-CSRFToken': csrfToken,
-        'Content-Type': 'application/json',
-      },
-      withCredentials: true, // Ensure cookies are sent with the reques
-    });
+    const response = await axiosInstance.post(`/add-to-cart/${productId}/`)
     console.log('Product added to cart', response.data);
   } catch (error) {
     console.error('Error adding product to cart:', error);

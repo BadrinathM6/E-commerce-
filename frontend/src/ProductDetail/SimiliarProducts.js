@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
+import axiosInstance from '../utils/axiosConfig';
 
 const SimilarProducts = ({ productId }) => {
   const [similarProducts, setSimilarProducts] = useState([]);
@@ -8,7 +8,7 @@ const SimilarProducts = ({ productId }) => {
   useEffect(() => {
     const fetchSimilarProducts = async () => {
       try {
-        const response = await axios.get(`http://127.0.0.1:8000/product/${productId}/`);
+        const response = await axiosInstance.get(`/product/${productId}/`);
         setSimilarProducts(response.data.similar_products);
       } catch (error) {
         console.error("Error fetching similar products:", error);
@@ -45,7 +45,7 @@ const SimilarProducts = ({ productId }) => {
                 className="w-28 sm:w-[240px] border rounded-lg p-4 shadow-sm bg-white flex-shrink-0"
               >
                 <img
-                  src={`http://localhost:8000${product.image}`}
+                  src={`http://localhost:8000${product.main_image}`}
                   alt={product.name}
                   className="w-full h-auto rounded-lg mb-2"
                 />

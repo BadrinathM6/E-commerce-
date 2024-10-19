@@ -1,5 +1,5 @@
 import React, {useEffect, useState} from 'react';
-import axios from 'axios';
+import axiosInstance from '../utils/axiosConfig';
 
 const TrendingProducts = () => {
 
@@ -7,7 +7,7 @@ const TrendingProducts = () => {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        axios.get('http://127.0.0.1:8000/')
+        axiosInstance.get('')
         .then((response) => {
             console.log(response.data.trending_products);
             settrending_products(response.data.trending_products);  // Ensure you're setting this correctly
@@ -34,7 +34,7 @@ const TrendingProducts = () => {
                 <div className="p-4">
                 <img
                     className="w-full h-50 object-cover rounded-lg"
-                    src={`http://localhost:8000${trending_product.main_image_url}`}
+                    src={`http://localhost:8000${trending_product.main_image}`}
                     alt={trending_product.name}
                 />
                 <p className="text-gray-800 mt-3 text-sm">{trending_product.short_desc}</p>

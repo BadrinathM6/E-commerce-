@@ -1,56 +1,61 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import { useNavigate, useLocation } from 'react-router-dom';
+import axiosInstance from '../utils/axiosConfig'; // Adjust the import path as needed
 
 const Cart = () => {
   const [cartData, setCartData] = useState(null);
-
-  const getCSRFToken = () => {
-    const token = document.cookie.split('; ').find(row => row.startsWith('csrftoken='));
-    console.log('CSRF Token:', token ? token.split('=')[1] : 'Not found');
-    return token ? token.split('=')[1] : '';
-  };
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
     const fetchCartData = async () => {
+      setIsLoading(true);
+      setError(null);
       try {
-        await axios.get('http://127.0.0.1:8000/get-csrf-token/');
-
-        const response = await axios.get('http://127.0.0.1:8000/cart/');
+        const response = await axiosInstance.get('/cart/');
         setCartData(response.data);
       } catch (error) {
         console.error('Error fetching cart data:', error);
+        if (error.response && error.response.status === 401) {
+          sessionStorage.setItem('redirectAfterLogin', location.pathname);
+          navigate('/login');
+        } else {
+          setError('An error occurred while fetching your cart. Please try again later.');
+        }
+      } finally {
+        setIsLoading(false);
       }
     };
 
     fetchCartData();
-  }, []);
+  }, [navigate, location]);
+
+  const handleAuthError = () => {
+    navigate('/login', { state: { from: location.pathname } });
+  };
 
   const updateCart = async (productId, quantity) => {
-    console.log('Updating product:', productId, 'with quantity:', quantity); 
+
+    const quantityNum = parseInt(quantity, 10); // Ensure quantity is an integer
+    if (isNaN(quantityNum) || quantityNum < 1) return;
+
     try {
-      const csrfToken = getCSRFToken();
-      const response = await axios.post(
-        `http://127.0.0.1:8000/update-cart/${productId}/`,
-        { quantity: parseInt(quantity, 10) },
-        {
-          headers: {
-            'X-CSRFToken': csrfToken,
-            'Content-Type': 'application/json',
-          },
-          withCredentials: true,
-        }
+      const response = await axiosInstance.post(
+        `/update-cart/${productId}/`,
+        { quantity: quantityNum }
       );
   
-      // Update the cart state with new quantity and prices
       setCartData((prevCartData) => {
         const updatedItems = prevCartData.cart_items.map((item) => {
           if (item.product.id === productId) {
             return {
               ...item,
-              quantity: parseInt(quantity, 10),
+              quantity: quantityNum,
               product: {
                 ...item.product,
-                discounted_price: response.data.discounted_price, // Update price from the response
+                discounted_price: response.data.discounted_price,
               },
             };
           }
@@ -60,42 +65,25 @@ const Cart = () => {
         return {
           ...prevCartData,
           cart_items: updatedItems,
-          total_discounted_price: response.data.total_discounted_price, // Update total price
-          total_discount: response.data.total_discount, // Update total discount
+          total_discounted_price: response.data.total_discounted_price,
+          total_discount: response.data.total_discount,
         };
       });
   
       console.log('Product updated in cart', response.data);
     } catch (error) {
-      console.error('Error updating product in cart:', error); // Log the full error response
-      if (error.response) {
-        // The request was made and the server responded with a status code outside the range of 2xx
-        console.log('Error Response:', error.response);
-      } else if (error.request) {
-        // The request was made but no response was received
-        console.log('No response received:', error.request);
+      console.error('Error updating product in cart:', error);
+      if (error.response && error.response.status === 401) {
+        handleAuthError();
       } else {
-        // Something happened in setting up the request that triggered an Error
-        console.log('Error setting up request:', error.message);
+        alert('Error updating product in cart. Please try again.');
       }
-      alert('Error updating product in cart. Please try again.');
     }
   };
 
   const handleRemoveFromCart = async (productId) => {
     try {
-      const csrfToken = getCSRFToken();
-      const response = await axios.post(
-        `http://127.0.0.1:8000/remove-from-cart/${productId}/`,
-        {},
-        {
-          headers: {
-            'X-CSRFToken': csrfToken,
-            'Content-Type': 'application/json',
-          },
-          withCredentials: true,
-        }
-      );
+      const response = await axiosInstance.post(`/remove-from-cart/${productId}/`);
       console.log('Product removed from cart', response.data);
 
       setCartData(prevCartData => ({
@@ -104,10 +92,17 @@ const Cart = () => {
       }));
     } catch (error) {
       console.error('Error removing product from cart:', error);
+      if (error.response && error.response.status === 401) {
+        handleAuthError();
+      } else {
+        alert('Error removing product from cart. Please try again.');
+      }
     }
   };
 
-  if (!cartData) return <div>Loading...</div>;
+  if (isLoading) return <div>Loading...</div>;
+  if (error) return <div className="text-red-500">{error}</div>;
+  if (!cartData || cartData.cart_items.length === 0) return <div>Your cart is empty.</div>;
 
   return (
     <div className="bg-gray-100 min-h-screen">
@@ -117,7 +112,7 @@ const Cart = () => {
             <div className="flex items-start">
               <div className="flex flex-col items-center mr-6">
                 <img
-                  src={`http://localhost:8000${item.product.main_image.url}`}
+                  src={`http://127.0.0.1:8000${item.product.main_image}`}
                   alt={item.product.name}
                   className="w-24 h-24 object-cover border border-gray-200 rounded mb-2"
                 />
