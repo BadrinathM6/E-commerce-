@@ -105,7 +105,7 @@ const Cart = () => {
   if (!cartData || cartData.cart_items.length === 0) return <div>Your cart is empty.</div>;
 
   return (
-    <div className="bg-gray-100 min-h-screen">
+    <div className="bg-gray-100 min-h-screen pb-[100px] overflow-y-auto">
       <div className="max-w-3xl mx-auto bg-white border border-gray-200 p-6 rounded-lg shadow-md mt-5">
         {cartData.cart_items.map((item, index) => (
           <div key={item.product.id} className="mb-6">

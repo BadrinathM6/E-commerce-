@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import axiosInstance from '../utils/axiosConfig';
+import Swal from 'sweetalert2'
 
 const ProductContent = ({ productId, quantity, updateQuantity }) => {
   const [product, setProduct] = useState(null);
@@ -52,18 +53,34 @@ const ProductContent = ({ productId, quantity, updateQuantity }) => {
   const descriptionPoints = product.description.split('*').filter(point => point.trim() !== '');
 
   const handleAddToCart = async () => {
-  try {
-    const response = await axiosInstance.post(`/add-to-cart/${productId}/`)
-    console.log('Product added to cart', response.data);
-  } catch (error) {
-    console.error('Error adding product to cart:', error);
-    if (error.response) {
-      console.error('Response status:', error.response.status);
-      console.error('Response data:', error.response.data);
+    try {
+      const response = await axiosInstance.post(`/add-to-cart/${productId}/`);
+      console.log('Product added to cart', response.data);
+  
+      // Show success message using SweetAlert2
+      Swal.fire({
+        position: 'top-end',
+        icon: 'success',
+        title: 'Your item has been added to the cart',
+        showConfirmButton: false,
+        timer: 1500
+      });
+      
+    } catch (error) {
+      console.error('Error adding product to cart:', error);
+      if (error.response) {
+        console.error('Response status:', error.response.status);
+        console.error('Response data:', error.response.data);
+      }
+  
+      // Show error message using SweetAlert2
+      Swal.fire({
+        icon: 'error',
+        title: 'Oops...',
+        text: 'Error adding product to cart.',
+      });
     }
-    alert('Error adding product to cart. Please try again.');
-  }
-};
+  };
 
   return (
     <div className="flex flex-col p-4 bg-white rounded-lg shadow-md space-y-4 md:space-y-6 lg:space-y-8 md:max-w-4xl mx-auto">

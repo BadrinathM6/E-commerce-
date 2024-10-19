@@ -190,33 +190,30 @@ def update_cart(request, product_id):
         quantity = data.get('quantity')
 
         cart = get_object_or_404(Cart, user=request.user)
-        cart_items = CartItem.objects.filter(cart=cart)
         product = get_object_or_404(Product, id=product_id)
-
-        # Calculate total prices before changes
-        total_original_price = sum(item.product.original_price * item.quantity for item in cart_items)
-        total_discounted_price = sum(item.product.discounted_price * item.quantity for item in cart_items)
-        total_discount = total_original_price - total_discounted_price
 
         cart_item = CartItem.objects.filter(cart=cart, product=product).first()
 
         if cart_item:
             if quantity is not None and quantity > 0:
-                # Update quantity and save
+                # Update the quantity of the cart item
                 cart_item.quantity = quantity
                 cart_item.save()
+
+                # Recalculate total prices for the cart after updating the quantity
+                cart_items = CartItem.objects.filter(cart=cart)
                 
-                # Recalculate total prices after the update
+                total_original_price = sum(item.product.original_price * item.quantity for item in cart_items)
                 total_discounted_price = sum(item.product.discounted_price * item.quantity for item in cart_items)
                 total_discount = total_original_price - total_discounted_price
-                
+
                 logger.info(f"Cart updated for user {request.user.username}: {product.name} quantity set to {quantity}")
                 return Response({
                     'message': 'Cart updated successfully',
                     'status': 'success',
-                    'discounted_price': cart_item.product.discounted_price * quantity,  # Return the updated price based on quantity
-                    'total_discounted_price': total_discounted_price,
-                    'total_discount': total_discount
+                    'discounted_price': cart_item.product.discounted_price * quantity,  # Updated price for the current item
+                    'total_discounted_price': total_discounted_price,  # Updated total price for the cart
+                    'total_discount': total_discount  # Updated total discount for the cart
                 })
             else:
                 # Remove item from cart if quantity is zero or less
@@ -230,6 +227,7 @@ def update_cart(request, product_id):
     except Exception as e:
         logger.error(f"Error updating cart: {str(e)}")
         return Response({'message': 'An error occurred while updating the cart.', 'status': 'error'}, status=500)
+
                 
 # checkout_view
 def checkout(request):
