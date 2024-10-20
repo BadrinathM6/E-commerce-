@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
-from .models import NameUser, Category, Product, ProductImage, Cart, CartItem, Order, OrderItem, SearchHistory, Review
+from .models import NameUser, Category, Product, ProductImage, Cart, CartItem, Order, OrderItem, SearchHistory, Review, SavedAddress
 
 # User Serializer
 
@@ -105,21 +105,19 @@ class CartItemSerializer(serializers.ModelSerializer):
 
 
 # Order Serializer
-class OrderSerializer(serializers.ModelSerializer):
-    user = NameUserSerializer(read_only=True)
-
-    class Meta:
-        model = Order
-        fields = ['id', 'user', 'total_price', 'ordered_at', 'status']
-
-
-# OrderItem Serializer
 class OrderItemSerializer(serializers.ModelSerializer):
-    product = ProductSerializer(read_only=True) 
-
+    product = serializers.CharField(source='product.name')
+    
     class Meta:
         model = OrderItem
-        fields = ['id', 'order', 'product', 'quantity', 'price']
+        fields = ['product', 'quantity', 'price']
+
+class OrderSerializer(serializers.ModelSerializer):
+    items = OrderItemSerializer(many=True, read_only=True)
+    
+    class Meta:
+        model = Order
+        fields = ['id', 'ordered_at', 'status', 'total_price', 'shipping_address', 'items']
 
 
 # Search History Serializer
@@ -139,3 +137,8 @@ class ReviewSerializer(serializers.ModelSerializer):
     class Meta:
         model = Review
         fields = ['id', 'product', 'user', 'review', 'rating', 'created_at']
+
+class SavedAddressSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SavedAddress
+        fields = ['id', 'full_name', 'address_line1', 'address_line2', 'city', 'state', 'zip_code', 'country']

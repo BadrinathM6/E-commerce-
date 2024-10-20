@@ -6,8 +6,8 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
-from .models import Category, Product, Cart, CartItem, SearchHistory, Review, Order, OrderItem
-from .serializers import NameUserSerializer, ProductSerializer, CartItemSerializer, CategorySerializer
+from .models import Category, Product, Cart, CartItem, SearchHistory, Review, Order, OrderItem, SavedAddress
+from .serializers import NameUserSerializer, OrderSerializer, ProductSerializer, CartItemSerializer, CategorySerializer, SavedAddressSerializer
 from django.contrib.auth import login, authenticate
 from rest_framework_simplejwt.tokens import RefreshToken
 
@@ -230,35 +230,148 @@ def update_cart(request, product_id):
 
                 
 # checkout_view
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def saved_addresses(request):
+    addresses = SavedAddress.objects.filter(user=request.user)
+    serializer = SavedAddressSerializer(addresses, many=True)
+    return Response(serializer.data)
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
 def checkout(request):
+    print("Received request data:", request.data)  # Debug: log the incoming request data
+    
     cart, created = Cart.objects.get_or_create(user=request.user)
     cart_items = cart.items.all()
-    total = sum(item.product.price * item.quantity for item in cart_items)
+    
+    if not cart_items.exists():
+        return Response({'message': 'Your cart is empty.'}, status=status.HTTP_400_BAD_REQUEST)
 
-    if request.method == 'POST':
-        order = Order.objects.create(user=request.user, total_price=total)
-        for item in cart_items:
-            OrderItem.objects.create(order=order, product=item.product, quantity=item.quantity, price=item.product.price)
-        cart_items.delete()
+    use_saved_address = request.data.get('use_saved_address', False)
+    shipping_address_data = request.data.get('shipping_address')
 
-        return JsonResponse({'message': "Order placed successfully!", 'order_id': order.id, 'success': True})
+    if use_saved_address:
+        # Check if the address ID provided exists
+        try:
+            address = SavedAddress.objects.get(id=shipping_address_data, user=request.user)
+        except SavedAddress.DoesNotExist:
+            return Response({'message': 'Invalid saved address.'}, status=status.HTTP_400_BAD_REQUEST)
+    else:
+        # Validate the shipping address data
+        if not shipping_address_data:
+            return Response({'message': 'Shipping address data is required.'}, status=status.HTTP_400_BAD_REQUEST)
 
-    cart_data = [{'product': item.product.name, 'quantity': item.quantity, 'price': item.product.price} for item in cart_items]
+        address_serializer = SavedAddressSerializer(data=shipping_address_data)
+        if address_serializer.is_valid():
+            address = address_serializer.save(user=request.user)
+        else:
+            return Response(address_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    return JsonResponse({'cart_items': cart_data, 'total': total})
+    total = sum(item.product.discounted_price * item.quantity for item in cart_items)
+
+    order = Order.objects.create(
+        user=request.user,
+        total_price=total,
+        shipping_address=f"{address.full_name}, {address.address_line1}, {address.city}, {address.state}, {address.zip_code}, {address.country}"
+    )
+
+    for item in cart_items:
+        OrderItem.objects.create(
+            order=order, 
+            product=item.product, 
+            quantity=item.quantity, 
+            price=item.product.discounted_price
+        )
+    
+    # Clear the cart after creating the order
+    cart_items.delete()
+
+    serializer = OrderSerializer(order)
+    return Response({
+        'message': "Order placed successfully!",
+        'order': serializer.data
+    }, status=status.HTTP_201_CREATED)
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def checkout(request):
+    print("Received request data:", request.data)  # Debug: log the incoming request data
+    
+    cart, created = Cart.objects.get_or_create(user=request.user)
+    cart_items = cart.items.all()
+    
+    if not cart_items.exists():
+        return Response({'message': 'Your cart is empty.'}, status=status.HTTP_400_BAD_REQUEST)
+
+    use_saved_address = request.data.get('use_saved_address', False)
+    shipping_address_data = request.data.get('shipping_address')
+
+    if use_saved_address:
+        # Check if the address ID provided exists
+        try:
+            address = SavedAddress.objects.get(id=shipping_address_data, user=request.user)
+        except SavedAddress.DoesNotExist:
+            return Response({'message': 'Invalid saved address.'}, status=status.HTTP_400_BAD_REQUEST)
+    else:
+        # Validate the shipping address data
+        if not shipping_address_data:
+            return Response({'message': 'Shipping address data is required.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        address_serializer = SavedAddressSerializer(data=shipping_address_data)
+        if address_serializer.is_valid():
+            address = address_serializer.save(user=request.user)
+        else:
+            print("Serializer errors:", address_serializer.errors)  
+            return Response(address_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    total = sum(item.product.discounted_price * item.quantity for item in cart_items)
+
+    order = Order.objects.create(
+        user=request.user,
+        total_price=total,
+        shipping_address=f"{address.full_name}, {address.address_line1}, {address.city}, {address.state}, {address.zip_code}, {address.country}"
+    )
+
+    for item in cart_items:
+        OrderItem.objects.create(
+            order=order, 
+            product=item.product, 
+            quantity=item.quantity, 
+            price=item.product.discounted_price
+        )
+    
+    # Clear the cart after creating the order
+    cart_items.delete()
+
+    serializer = OrderSerializer(order)
+    return Response({
+        'message': "Order placed successfully!",
+        'order': serializer.data
+    }, status=status.HTTP_201_CREATED)
 
 
-# order_confirmation_view
-def order_confirmation(request, order_id):
+
+# order_detail_view
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def order_detail(request, order_id):
     order = get_object_or_404(Order, id=order_id, user=request.user)
+    serializer = OrderSerializer(order)
+    return Response(serializer.data)
 
-    order_data = {
-        'id': order.id,
-        'total_price': order.total_price,
-        'items': [{'product': item.product.name, 'quantity': item.quantity, 'price': item.price} for item in order.items.all()]
-    }
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def order_List(request):
+    orders = Order.objects.filter(user=request.user).order_by('-ordered_at')
 
-    return JsonResponse(order_data)
+    if not orders.exists():
+        return Response({'message': 'No orders found.'}, status=404)
+
+    latest_order = orders.first()
+
+    serializer = OrderSerializer(latest_order)
+
+    return Response(serializer.data)
 
 
 # search_view

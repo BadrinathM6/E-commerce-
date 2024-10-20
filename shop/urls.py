@@ -3,8 +3,8 @@ from django.contrib.auth import views as auth_views
 from django.conf.urls.static import static
 from django.urls import path
 from .views import (
-    home, product_list, product_detail, add_to_cart, remove_from_cart, update_cart, view_cart, checkout, order_confirmation, submit_review, register_view, login_view,  
-    search, search_suggestions, search_history, submit_review
+    home, product_list, product_detail, add_to_cart, remove_from_cart, update_cart, view_cart, checkout, order_List, order_detail, submit_review, register_view, login_view,  
+    search, search_suggestions, search_history, submit_review ,saved_addresses
 )
 from rest_framework_simplejwt.views import (
     TokenObtainPairView,
@@ -25,14 +25,12 @@ urlpatterns = [
     path('update-cart/<int:product_id>/', update_cart, name='update_cart'),
     path('cart/', view_cart, name='view_cart'),
     path('checkout/', checkout, name='checkout'),
-    path('order-confirmation/<int:order_id>/', order_confirmation, name='order_confirmation'),
+    path('saved-addresses/', saved_addresses, name='saved_addresses'),
+    path('orders/', order_List, name='order_list'),
+    path('orders/<int:order_id>/', order_detail, name='order_detail'),
     path('search/', search, name='search'),
     path('search-suggestions/', search_suggestions, name='search_suggestions'),
     path('search-history/', search_history, name='search_history'),
-    path('password_reset/', auth_views.PasswordResetView.as_view(template_name='shop/password_reset.html'), name='password_reset'),
-    path('password_reset/done/', auth_views.PasswordResetDoneView.as_view(template_name='shop/password_reset_done.html'), name='shop/password_reset_done'),
-    path('reset/<uidb64>/<token>/', auth_views.PasswordResetConfirmView.as_view(template_name='shop/password_reset_confirm.html'), name='password_reset_confirm'),
-    path('reset/done/', auth_views.PasswordResetCompleteView.as_view(template_name='shop/password_reset_complete.html'), name='password_reset_complete'),
     path('register/', register_view, name='register'),
     path('login/', login_view, name='login'),
     path('logout/', auth_views.LogoutView.as_view(), name='logout'),

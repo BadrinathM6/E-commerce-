@@ -214,7 +214,8 @@ const Cart = () => {
             ₹{Number(cartData.total_discounted_price).toLocaleString('en-IN', { maximumFractionDigits: 0 })}
           </p>
         </div>
-        <button className="px-6 py-2 bg-yellow-500 text-white rounded hover:bg-yellow-600 transition">Buy All</button>
+        <button className="px-6 py-2 bg-yellow-500 text-white rounded hover:bg-yellow-600 transition"
+        onClick={() => navigate('/checkout/')}>Buy All</button>
       </div>
     </div>
   );
