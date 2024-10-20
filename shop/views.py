@@ -8,11 +8,17 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from .models import Category, Product, Cart, CartItem, SearchHistory, Review, Order, OrderItem, SavedAddress
 from .serializers import NameUserSerializer, OrderSerializer, ProductSerializer, CartItemSerializer, CategorySerializer, SavedAddressSerializer
-from django.contrib.auth import login, authenticate
+from django.contrib.auth import authenticate
 from rest_framework_simplejwt.tokens import RefreshToken
 
 
 logger = logging.getLogger(__name__)
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def user_profile(request):
+    serializer = NameUserSerializer(request.user)
+    return Response(serializer.data)
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
@@ -292,39 +298,29 @@ def checkout(request):
         'message': "Order placed successfully!",
         'order': serializer.data
     }, status=status.HTTP_201_CREATED)
+
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
-def checkout(request):
-    print("Received request data:", request.data)  # Debug: log the incoming request data
-    
-    cart, created = Cart.objects.get_or_create(user=request.user)
-    cart_items = cart.items.all()
-    
-    if not cart_items.exists():
-        return Response({'message': 'Your cart is empty.'}, status=status.HTTP_400_BAD_REQUEST)
-
-    use_saved_address = request.data.get('use_saved_address', False)
+def buy_now_checkout(request):
+    product_id = request.data.get('product_id')
+    quantity = request.data.get('quantity')
     shipping_address_data = request.data.get('shipping_address')
 
-    if use_saved_address:
-        # Check if the address ID provided exists
-        try:
-            address = SavedAddress.objects.get(id=shipping_address_data, user=request.user)
-        except SavedAddress.DoesNotExist:
-            return Response({'message': 'Invalid saved address.'}, status=status.HTTP_400_BAD_REQUEST)
+    if not product_id or not quantity or not shipping_address_data:
+        return Response({'message': 'Invalid data provided.'}, status=status.HTTP_400_BAD_REQUEST)
+
+    try:
+        product = Product.objects.get(id=product_id)
+    except Product.DoesNotExist:
+        return Response({'message': 'Product not found.'}, status=status.HTTP_404_NOT_FOUND)
+
+    address_serializer = SavedAddressSerializer(data=shipping_address_data)
+    if address_serializer.is_valid():
+        address = address_serializer.save(user=request.user)
     else:
-        # Validate the shipping address data
-        if not shipping_address_data:
-            return Response({'message': 'Shipping address data is required.'}, status=status.HTTP_400_BAD_REQUEST)
+        return Response(address_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-        address_serializer = SavedAddressSerializer(data=shipping_address_data)
-        if address_serializer.is_valid():
-            address = address_serializer.save(user=request.user)
-        else:
-            print("Serializer errors:", address_serializer.errors)  
-            return Response(address_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-    total = sum(item.product.discounted_price * item.quantity for item in cart_items)
+    total = product.discounted_price * int(quantity)
 
     order = Order.objects.create(
         user=request.user,
@@ -332,24 +328,18 @@ def checkout(request):
         shipping_address=f"{address.full_name}, {address.address_line1}, {address.city}, {address.state}, {address.zip_code}, {address.country}"
     )
 
-    for item in cart_items:
-        OrderItem.objects.create(
-            order=order, 
-            product=item.product, 
-            quantity=item.quantity, 
-            price=item.product.discounted_price
-        )
-    
-    # Clear the cart after creating the order
-    cart_items.delete()
+    OrderItem.objects.create(
+        order=order, 
+        product=product, 
+        quantity=quantity, 
+        price=product.discounted_price
+    )
 
     serializer = OrderSerializer(order)
     return Response({
         'message': "Order placed successfully!",
         'order': serializer.data
     }, status=status.HTTP_201_CREATED)
-
-
 
 # order_detail_view
 @api_view(['GET'])
@@ -367,9 +357,7 @@ def order_List(request):
     if not orders.exists():
         return Response({'message': 'No orders found.'}, status=404)
 
-    latest_order = orders.first()
-
-    serializer = OrderSerializer(latest_order)
+    serializer = OrderSerializer(orders, many=True)
 
     return Response(serializer.data)
 

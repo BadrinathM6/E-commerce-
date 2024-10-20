@@ -4,7 +4,7 @@ from django.conf.urls.static import static
 from django.urls import path
 from .views import (
     home, product_list, product_detail, add_to_cart, remove_from_cart, update_cart, view_cart, checkout, order_List, order_detail, submit_review, register_view, login_view,  
-    search, search_suggestions, search_history, submit_review ,saved_addresses
+    search, search_suggestions, search_history, submit_review ,saved_addresses, user_profile, buy_now_checkout
 )
 from rest_framework_simplejwt.views import (
     TokenObtainPairView,
@@ -25,6 +25,7 @@ urlpatterns = [
     path('update-cart/<int:product_id>/', update_cart, name='update_cart'),
     path('cart/', view_cart, name='view_cart'),
     path('checkout/', checkout, name='checkout'),
+    path('buy-now-checkout/', buy_now_checkout, name='buy-now-checkout'),
     path('saved-addresses/', saved_addresses, name='saved_addresses'),
     path('orders/', order_List, name='order_list'),
     path('orders/<int:order_id>/', order_detail, name='order_detail'),
@@ -34,6 +35,7 @@ urlpatterns = [
     path('register/', register_view, name='register'),
     path('login/', login_view, name='login'),
     path('logout/', auth_views.LogoutView.as_view(), name='logout'),
+    path('user-profile/', user_profile, name='user_profile'),
 
 ]
 

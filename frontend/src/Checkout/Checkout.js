@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axiosInstance from '../utils/axiosConfig';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import Swal from 'sweetalert2';
-
 
 const CheckoutPage = () => {
   const [cartItems, setCartItems] = useState([]);
@@ -23,11 +22,31 @@ const CheckoutPage = () => {
   });
 
   const navigate = useNavigate();
+  const location = useLocation();
+  const isBuyNow = location.state?.buyNow;
+  const buyNowProduct = location.state?.product;
+
+  const calculateTotal = (items) => {
+    return items.reduce((sum, item) => sum + (item.product.discounted_price * item.quantity), 0);
+  };
 
   useEffect(() => {
-    fetchCartItems();
+    if (isBuyNow && buyNowProduct) {
+      const buyNowItems = [{
+        product: {
+          ...buyNowProduct,
+          discounted_price: parseFloat(buyNowProduct.discounted_price)
+        },
+        quantity: buyNowProduct.quantity
+      }];
+      setCartItems(buyNowItems);
+      setTotal(calculateTotal(buyNowItems));
+      setLoading(false);
+    } else {
+      fetchCartItems();
+    }
     fetchSavedAddresses();
-  }, []);
+  }, [isBuyNow, buyNowProduct]);
 
   const fetchCartItems = async () => {
     try {
@@ -79,13 +98,12 @@ const CheckoutPage = () => {
       let addressToUse = selectedAddressId 
         ? savedAddresses.find(addr => addr.id === selectedAddressId) 
         : shippingAddress;
-  
-      // Ensure all fields are present
+
       const addressData = {
-        shipping_address:{
+        shipping_address: {
           full_name: addressToUse.full_name,
           address_line1: addressToUse.address_line1,
-          address_line2: addressToUse.address_line2 || '', // Default to empty if not provided
+          address_line2: addressToUse.address_line2 || '',
           zip_code: addressToUse.zip_code,
           city: addressToUse.city,
           state: addressToUse.state,
@@ -93,32 +111,32 @@ const CheckoutPage = () => {
           use_saved_address: !!selectedAddressId,
         }
       };
-  
-      console.log('Address data being sent:', addressData); // Log data before sending
-  
-      const response = await axiosInstance.post('/checkout/', addressData);
-      console.log('Response data:', response.data);
-      
-      if (response.data.message === "Order placed successfully!") {
 
+      let response;
+      if (isBuyNow) {
+        // Handle Buy Now checkout
+        response = await axiosInstance.post('/buy-now-checkout/', {
+          ...addressData,
+          product_id: buyNowProduct.id,
+          quantity: buyNowProduct.quantity
+        });
+      } else {
+        // Handle regular cart checkout
+        response = await axiosInstance.post('/checkout/', addressData);
+      }
+
+      if (response.data.message === "Order placed successfully!") {
         const orderId = response.data.order.id;
-        console.log('OrderId:',orderId);
-        // Show Sweet Alert notification
         await Swal.fire({
           icon: 'success',
           title: 'Success!',
           text: 'Your order has been placed',
           confirmButtonText: 'OK'
         });
-        
-        // Navigate to the order page
-        navigate(`/orders/${orderId}`); // Adjust this path as needed
+        navigate(`/orders/${orderId}`);
       }
     } catch (err) {
-      if (err.response) {
-        console.error('Error data:', err.response.data); // Log error data
-        console.error('Error status:', err.response.status); // Log status code
-      }
+      console.error('Error:', err);
       setError('Failed to place order. Please try again.');
     }
   };
@@ -133,8 +151,8 @@ const CheckoutPage = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         <div>
           <h2 className="text-2xl font-semibold mb-4">Order Summary</h2>
-          {cartItems.map((item) => (
-            <div key={item.id} className="flex justify-between items-center mb-2">
+          {cartItems.map((item, index) => (
+            <div key={index} className="flex justify-between items-center mb-2">
               <span>{item.product.name} x {item.quantity}</span>
               <span>₹{Number(item.product.discounted_price * item.quantity).toLocaleString('en-IN', { maximumFractionDigits: 0 })}</span>
             </div>

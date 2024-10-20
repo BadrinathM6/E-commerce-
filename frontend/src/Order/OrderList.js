@@ -17,9 +17,8 @@ const OrderList = () => {
       const response = await axiosInstance.get('/orders/');
       console.log('API Response:', response.data);
       
-      if (response.data && typeof response.data === 'object') {
-        // Assuming the response is a single order object
-        setOrders([response.data]);
+      if (Array.isArray(response.data)) {
+        setOrders(response.data);
       } else {
         console.error('Unexpected data structure');
         setError('Unexpected data structure in the response.');
@@ -57,40 +56,32 @@ const OrderList = () => {
         <p className="text-center">You have no orders yet.</p>
       ) : (
         <div className="bg-white shadow-lg rounded-lg overflow-hidden">
-          {orders.map((order, index) => {
-            console.log(`Order ${index}:`, order);
-            const orderId = order.id;
-            const orderDate = order.ordered_at || 'Unknown Date';
-            const totalPrice = order.total_price || 'Unknown Amount';
-            const status = order.status || 'Unknown Status';
-
-            return (
-              <div 
-                key={orderId} 
-                onClick={() => handleOrderClick(orderId)}
-                className="p-4 border-b last:border-b-0 cursor-pointer hover:bg-gray-50"
-              >
-                <div className="flex justify-between items-center">
-                  <div>
-                    <p className="font-semibold">Order #{orderId}</p>
-                    <p className="text-sm text-gray-600">{formatDate(orderDate)}</p>
-                  </div>
-                  <div className="text-right">
-                    <p className="font-semibold">{formatPrice(totalPrice)}</p>
-                    <p className="text-sm text-gray-600">{status}</p>
-                  </div>
+          {orders.map((order) => (
+            <div 
+              key={order.id} 
+              onClick={() => handleOrderClick(order.id)}
+              className="p-4 border-b last:border-b-0 cursor-pointer hover:bg-gray-50"
+            >
+              <div className="flex justify-between items-center">
+                <div>
+                  <p className="font-semibold">Order #{order.id}</p>
+                  <p className="text-sm text-gray-600">{formatDate(order.ordered_at)}</p>
                 </div>
-                <div className="mt-2">
-                  <p className="text-sm font-semibold">Items:</p>
-                  {order.items && order.items.map((item, itemIndex) => (
-                    <p key={itemIndex} className="text-sm">
-                      {item.product} - Quantity: {item.quantity}, Price: {formatPrice(item.price)}
-                    </p>
-                  ))}
+                <div className="text-right">
+                  <p className="font-semibold">{formatPrice(order.total_price)}</p>
+                  <p className="text-sm text-gray-600">{order.status}</p>
                 </div>
               </div>
-            );
-          })}
+              <div className="mt-2">
+                <p className="text-sm font-semibold">Items:</p>
+                {order.items && order.items.map((item, itemIndex) => (
+                  <p key={itemIndex} className="text-sm">
+                    {item.product} - Quantity: {item.quantity}, Price: {formatPrice(item.price)}
+                  </p>
+                ))}
+              </div>
+            </div>
+          ))}
         </div>
       )}
     </div>

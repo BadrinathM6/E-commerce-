@@ -1,11 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import axiosInstance from '../utils/axiosConfig';
 import Swal from 'sweetalert2'
+import { useNavigate } from 'react-router-dom';
 
 const ProductContent = ({ productId, quantity, updateQuantity }) => {
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isNameExpanded, setIsNameExpanded] = useState(false);
+  const navigate = useNavigate();
   
   const maxNameLength = 50;
 
@@ -48,6 +50,20 @@ const ProductContent = ({ productId, quantity, updateQuantity }) => {
         </button>
       </>
     );
+  };
+
+  const handleBuyNow = () => {
+    navigate('/checkout', { 
+      state: { 
+        buyNow: true, 
+        product: {
+          id: product.id,
+          name: product.name,
+          discounted_price: parseFloat(product.discounted_price),
+          quantity: parseInt(quantity, 10)
+        }
+      }
+    });
   };
 
   const descriptionPoints = product.description.split('*').filter(point => point.trim() !== '');
@@ -146,6 +162,7 @@ const ProductContent = ({ productId, quantity, updateQuantity }) => {
           Add to Cart
         </button>
         <button
+          onClick={handleBuyNow}
           className="w-full px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition"
         >
           Buy Now
