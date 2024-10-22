@@ -4,7 +4,7 @@ from django.conf.urls.static import static
 from django.urls import path
 from .views import (
     home, product_list, product_detail, add_to_cart, remove_from_cart, update_cart, view_cart, checkout, order_List, order_detail, submit_review, register_view, login_view,  
-    search, search_suggestions, search_history, submit_review ,saved_addresses, user_profile, buy_now_checkout
+    search, search_suggestions, search_history, submit_review ,saved_addresses, user_profile, buy_now_checkout, password_reset_request, password_reset_confirm
 )
 from rest_framework_simplejwt.views import (
     TokenObtainPairView,
@@ -36,6 +36,12 @@ urlpatterns = [
     path('login/', login_view, name='login'),
     path('logout/', auth_views.LogoutView.as_view(), name='logout'),
     path('user-profile/', user_profile, name='user_profile'),
+    path('api/password_reset/', password_reset_request, name="password_reset"),
+    path('api/password_reset_confirm/<uidb64>/<token>/', password_reset_confirm, name='password_reset_confirm'),
+
+    # path('password_reset/done/', auth_views.PasswordResetDoneView.as_view(template_name='shop/password_reset_done.html'), name='password_reset_done'),
+    # path('reset/<uidb64>/<token>/', auth_views.PasswordResetConfirmView.as_view(template_name="shop/password_reset_confirm.html"), name='password_reset_confirm'),
+    # path('reset/done/', auth_views.PasswordResetCompleteView.as_view(template_name='shop/password_reset_complete.html'), name='password_reset_complete'),
 
 ]
 

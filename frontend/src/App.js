@@ -10,6 +10,10 @@ import CheckoutPage from './Checkout/Checkout';
 import OrderPage from './Order/Order';
 import OrderList from './Order/OrderList';
 import UserProfile from './Login&Register/userProfile';
+import PasswordResetForm from './Login&Register/Password_reset';
+import PasswordResetConfirm from './Login&Register/PasswordConfirmation';
+import PasswordResetDone from './Login&Register/PasswordResetDone'
+import PasswordResetComplete from './Login&Register/ResetDone';
 
 const App = () =>{
   return(
@@ -25,6 +29,10 @@ const App = () =>{
         <Route path='/register' element= {<Register/>}/>
         <Route path='/login' element={<Login/>}/>
         <Route path='/user-profile' element={<UserProfile/>}/>
+        <Route path="/password-reset" element={<PasswordResetForm />} />
+        <Route path="/reset/:uidb64/:token" element={<PasswordResetConfirm />} />
+        <Route path='/password-reset-complete' element={<PasswordResetDone/>}/>
+        <Route path='/reset/done' element={<PasswordResetComplete/>} />
       </Routes>
     </Router>
   )

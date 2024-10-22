@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link} from 'react-router-dom';
 import axiosInstance from '../utils/axiosConfig';
 import background from '../images/Logo/login.webp';
 
@@ -82,6 +82,11 @@ const Login = () => {
                     <button type="submit" className="w-full h-12 bg-white text-gray-800 font-semibold rounded-full shadow-md hover:bg-gray-200 transition duration-200">
                         Login
                     </button>
+                    <div className="text-center mt-4">
+                        <Link to="/password-reset" className="text-blue-500 hover:underline">
+                            Forgot Password?
+                        </Link>
+                    </div>
                     <div className="text-center mt-4">
                         <p className="text-sm">Don't have an account? 
                         <span
