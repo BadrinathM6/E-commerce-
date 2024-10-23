@@ -1,5 +1,6 @@
 import logging
 import os
+import base64
 from django.shortcuts import get_object_or_404
 from django.db.models import Q
 from django.http import JsonResponse
@@ -456,28 +457,32 @@ def password_reset_request(request):
                 token = default_token_generator.make_token(user)
                 uid = urlsafe_base64_encode(force_bytes(user.pk))
                 
+                # Frontend configuration
+                frontend_domain = 'localhost:3000'  # Change this for production
+                frontend_protocol = 'http'  # Use 'https' for production
+                
                 # Prepare email context
                 context = {
                     "email": user.email,
-                    'domain': 'localhost:3000',
+                    'domain': frontend_domain,
                     'site_name': 'RolexCart',
                     "uid": uid,
                     "user": user,
                     'token': token,
-                    'protocol': 'http',
+                    'protocol': frontend_protocol,
                 }
                 
                 # Render email content
-                email_text_content = render_to_string("shop/password_reset_email.txt", context)
+                email_template = "shop/password_reset_email.txt"
+                email_content = render_to_string(email_template, context)
                 
                 try:
-                    # Send email using Django's send_mail with Gmail SMTP
+                    # Send email
                     send_mail(
                         subject="Password Reset Request",
-                        message=email_text_content,
+                        message=email_content,
                         from_email=os.environ.get('EMAIL_HOST_USER'),
                         recipient_list=[user.email],
-                        html_message=email_text_content,
                         fail_silently=False,
                     )
                     
@@ -487,8 +492,6 @@ def password_reset_request(request):
                         'status': 'success'
                     })
                 
-
-                    
                 except Exception as email_error:
                     logger.error(f"Failed to send password reset email: {str(email_error)}")
                     return Response({
@@ -496,66 +499,110 @@ def password_reset_request(request):
                         'status': 'error'
                     }, status=500)
                     
+        # Security best practice: Don't reveal if email exists
+        return Response({
+            'message': 'If a user exists with this email address, a password reset link will be sent.',
+            'status': 'success'
+        })
+                
     except Exception as e:
         logger.error(f"Password reset error: {str(e)}")
         return Response({
-            'message': f'An error occurred during password reset.',
+            'message': 'An error occurred during password reset.',
             'status': 'error'
         }, status=500)
-                
-    # Default response for non-existent email (security best practice)
-    return Response({
-        'message': 'If a user exists with this email address, a password reset link will be sent.',
-        'status': 'success'
-    }, status=200)
-
-import binascii
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def password_reset_confirm(request, uidb64, token):
     """
-    Handle the password reset confirmation process.
-    Expects uidb64, token, new_password1, and new_password2 in the request data.
+    Handle password reset confirmation.
+    
+    Args:
+        request: HTTP request object
+        uidb64: Base64 encoded user ID
+        token: Password reset token
+    
+    Returns:
+        Response object with status and message
     """
     try:
-        # Decode the user ID
+        # Validate input parameters
+        if not uidb64 or not token:
+            return Response({
+                'status': 'error',
+                'message': 'Invalid password reset link'
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        # Extract and validate passwords from request data
+        new_password = request.data.get('new_password')
+        confirm_password = request.data.get('new_password2')
+
+        if not new_password or not confirm_password:
+            return Response({
+                'status': 'error',
+                'message': 'Both password fields are required'
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        if new_password != confirm_password:
+            return Response({
+                'status': 'error',
+                'message': 'Passwords do not match'
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        # Safely decode the base64 user ID
         try:
-            uid = force_str(urlsafe_base64_decode(uidb64))
-        except (TypeError, ValueError, binascii.Error):
-            logger.error('Incorrect padding or invalid UID base64 string')
-            return JsonResponse({'message': 'Invalid reset link', 'status': 'error'}, status=status.HTTP_400_BAD_REQUEST)
+            # Add padding if necessary
+            padded_uidb64 = uidb64 + '=' * (-len(uidb64) % 4)
+            uid = force_str(urlsafe_base64_decode(padded_uidb64))
+        except (TypeError, ValueError, base64.binascii.Error) as e:
+            logger.error(f'Base64 decoding error: {str(e)}')
+            return Response({
+                'status': 'error',
+                'message': 'Invalid password reset link'
+            }, status=status.HTTP_400_BAD_REQUEST)
 
-        user = get_user_model().objects.get(pk=uid)
+        # Get the user model and validate user exists
+        User = get_user_model()
+        try:
+            user = User.objects.get(pk=uid)
+        except (TypeError, ValueError, User.DoesNotExist):
+            logger.error(f'User not found for ID: {uid}')
+            return Response({
+                'status': 'error',
+                'message': 'Invalid password reset link'
+            }, status=status.HTTP_400_BAD_REQUEST)
 
-        # Check if the token is valid
+        # Verify the token is valid
         if not default_token_generator.check_token(user, token):
-            logger.warning(f'Invalid token for user {user.username}')
-            return JsonResponse({'message': 'Invalid or expired reset link'}, status=status.HTTP_400_BAD_REQUEST)
+            logger.warning(f'Invalid or expired token for user {user.pk}')
+            return Response({
+                'status': 'error',
+                'message': 'Invalid or expired password reset link'
+            }, status=status.HTTP_400_BAD_REQUEST)
 
-        # Extract passwords from request data
-        new_password1 = request.data.get('new_password1')
-        new_password2 = request.data.get('new_password2')
+        # Validate password
+        try:
+            # Use Django's built-in password validation
+            user.set_password(new_password)
+            user.save()
+            logger.info(f'Password successfully reset for user {user.pk}')
+            
+            return Response({
+                'status': 'success',
+                'message': 'Password has been reset successfully'
+            }, status=status.HTTP_200_OK)
 
-        # Validate required fields
-        if not new_password1 or not new_password2:
-            logger.warning('Missing required fields for password reset confirmation')
-            return JsonResponse({'message': 'Missing required fields', 'status': 'error'}, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            logger.error(f'Password validation error: {str(e)}')
+            return Response({
+                'status': 'error',
+                'message': str(e)
+            }, status=status.HTTP_400_BAD_REQUEST)
 
-        # Validate password matching
-        if new_password1 != new_password2:
-            return JsonResponse({'message': 'Passwords do not match'}, status=status.HTTP_400_BAD_REQUEST)
-
-        # Set the new password
-        user.set_password(new_password1)
-        user.save()
-
-        logger.info(f'Password successfully reset for user {user.username}')
-        return JsonResponse({'message': 'Password has been reset successfully', 'status': 'success'}, status=status.HTTP_200_OK)
-
-    except get_user_model().DoesNotExist:
-        logger.error('User not found for password reset')
-        return JsonResponse({'message': 'Invalid reset link', 'status': 'error'}, status=status.HTTP_404_NOT_FOUND)
     except Exception as e:
-        logger.error(f'Unexpected error in password reset confirmation: {str(e)}')
-        return JsonResponse({'message': 'An error occurred while resetting your password', 'status': 'error'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        logger.error(f'Unexpected error in password reset: {str(e)}')
+        return Response({
+            'status': 'error',
+            'message': 'An error occurred while resetting your password'
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
