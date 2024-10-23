@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import axiosInstance from '../utils/axiosConfig'
+import axiosInstance from '../utils/axiosConfig';
+import WishlistButton from './WishListButton';
 
 const ProductImages = ({ productId }) => {
     const [productData, setProductData] = useState(null);
@@ -39,11 +40,15 @@ const ProductImages = ({ productId }) => {
                     scrollbar-width: none; 
                 }
             `}</style>
-            <img 
-                src={`http://localhost:8000${mainImage}`} 
-                alt={productData.name} 
-                className="w-full max-w-lg h-auto rounded-lg object-cover" 
-            />
+
+            <div className="relative">
+                <WishlistButton productId={productId} />
+                <img 
+                    src={`http://localhost:8000${mainImage}`} 
+                    alt={productData.name} 
+                    className="w-full max-w-lg h-auto rounded-lg object-cover" 
+                />
+            </div>
 
             {/* Thumbnails */}
             <div className="flex mt-4 space-x-2 overflow-x-auto scrollbar-hide">

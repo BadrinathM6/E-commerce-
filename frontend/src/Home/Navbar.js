@@ -160,7 +160,7 @@ const Navbar = () => {
 
             {/* User and Cart Icons */}
             <div className="usershop-icon flex items-center space-x-4">
-                <i className="fa fa-heart text-lg"></i>
+                <i className="fa fa-heart text-lg cursor-pointer" onClick={() => navigate('/wishlist/')}></i>
                 <i className="fa fa-shopping-cart text-lg cursor-pointer" onClick={() => navigate('/cart/')}></i>
                 <i className="fa fa-user text-lg cursor-pointer" onClick={() => navigate('/user-profile/')}></i>
             </div>

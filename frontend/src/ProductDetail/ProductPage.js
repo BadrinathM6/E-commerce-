@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
+import Navbar from '../Home/Navbar'
 import ProductContent from './ProductContent';
 import ProductImages from './ProductImages';
 import ProductReview from './ProductReview';
@@ -13,13 +14,14 @@ const ProductPage = () => {
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true); // Initialize loading state
   const [error, setError] = useState(null); // Initialize error state
+  const [reviews, setReviews] = useState([]); // State to hold reviews
 
   // Function to update quantity
   const updateQuantity = (change) => {
     setQuantity((prevQuantity) => Math.max(1, prevQuantity + change));
   };
 
-  // Fetch product details when the component mounts or productId changes
+  // Fetch product details and reviews when the component mounts or productId changes
   useEffect(() => {
     const fetchProductDetails = async (productId) => {
       try {
@@ -30,7 +32,6 @@ const ProductPage = () => {
           const productData = response.data;
 
           console.log("Product data before setting state:", productData); // Add this line
-
 
           if (productData) {
             setProduct(productData); // Set product if data is valid
@@ -48,8 +49,28 @@ const ProductPage = () => {
       }
     };
 
+    const fetchReviews = async () => {
+      try {
+        const response = await axiosInstance.get(`/product/${productId}/reviews/`);
+        setReviews(response.data.reviews);
+      } catch (error) {
+        console.error("Error fetching reviews:", error);
+      }
+    };
+
     fetchProductDetails(productId); // Call fetchProductDetails with the productId
+    fetchReviews(); // Fetch reviews for the product
   }, [productId]); // Dependencies array should contain productId
+
+  // Function to refresh reviews
+  const handleReviewSubmitted = async () => {
+    try {
+      const response = await axiosInstance.get(`/product/${productId}/submit-review/`);
+      setReviews(response.data); // Refresh reviews after a new review is submitted
+    } catch (error) {
+      console.error("Error refreshing reviews:", error);
+    }
+  };
 
   // Handle loading state
   if (loading) {
@@ -67,16 +88,18 @@ const ProductPage = () => {
   }
 
   return (
-    <div className="container mx-auto p-4">
-      <ProductImages productId={productId} />
-      <ProductContent
-        productId={productId}
-        quantity={quantity}
-        updateQuantity={updateQuantity}
-      />
-      <ProductReviewForm productId={productId} />
-      <ProductReview productId={productId} />
-      <SimilarProducts productId={productId} />
+    <div><Navbar/>
+      <div className="container mx-auto p-4">
+        <ProductImages productId={productId} />
+        <ProductContent
+          productId={productId}
+          quantity={quantity}
+          updateQuantity={updateQuantity}
+        />
+        <ProductReviewForm productId={productId} onReviewSubmitted={handleReviewSubmitted} />
+        <ProductReview productId={productId} reviews={reviews} /> {/* Pass reviews to ProductReview */}
+        <SimilarProducts productId={productId} />
+      </div>
     </div>
   );
 };

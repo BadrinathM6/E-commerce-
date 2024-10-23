@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { UserCircle, ShoppingCart, Package } from 'lucide-react';
+import { UserCircle, ShoppingCart, Package, Edit } from 'lucide-react'; // Import the Edit icon (pencil)
 import axiosInstance from '../utils/axiosConfig';
 import { useNavigate } from 'react-router-dom';
 
@@ -44,6 +44,10 @@ const UserProfile = () => {
     navigate('/orders');
   };
 
+  const handleEditProfile = () => {
+    navigate('/user-profile-update');  // Navigate to profile update page
+  };
+
   return (
     <div className="container mx-auto p-4">
       <div className="bg-white shadow-lg rounded-lg p-6">
@@ -72,11 +76,20 @@ const UserProfile = () => {
           </button>
         </div>
         
-        <div className="border-t pt-4">
+        <div className="border-t pt-4 relative">
           <h2 className="text-xl font-semibold mb-2">Profile Details</h2>
           <p><strong>Full Name:</strong> {user.full_name || 'Not provided'}</p>
           <p><strong>Phone:</strong> {user.phone_number || 'Not provided'}</p>
           <p><strong>Member Since:</strong> {new Date(user.date_joined).toLocaleDateString()}</p>
+          
+          {/* Pencil icon in the top right corner */}
+          <button 
+            onClick={handleEditProfile}
+            className="absolute top-4 right-4 text-gray-600 hover:text-gray-800"
+            aria-label="Edit profile"
+          >
+            <Edit className="w-5 h-5" />
+          </button>
         </div>
       </div>
     </div>

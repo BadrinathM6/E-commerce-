@@ -1,24 +1,22 @@
+from audioop import avg
 import logging
 import os
 import base64
+from django.db.models import Avg
 from django.shortcuts import get_object_or_404
 from django.db.models import Q
 from django.http import JsonResponse
 from django.contrib.auth import get_user_model
-from django.core.exceptions import ValidationError
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
-from .models import NameUser, Category, Product, Cart, CartItem, SearchHistory, Review, Order, OrderItem, SavedAddress
-from .serializers import NameUserSerializer, OrderSerializer, ProductSerializer, CartItemSerializer, CategorySerializer, SavedAddressSerializer
+from .models import NameUser,Category, Product, Cart, CartItem, SearchHistory, Review, Order, OrderItem, SavedAddress, Wishlist
+from .serializers import NameUserSerializer, OrderSerializer, ProductSerializer, CartItemSerializer, CategorySerializer, ReviewSerializer, SavedAddressSerializer, UpdateProfileSerializer, WishlistSerializer
 from django.contrib.auth import authenticate
 from rest_framework_simplejwt.tokens import RefreshToken
-from django.shortcuts import render, redirect
 from django.utils.encoding import force_str
-from django.core.mail import send_mail, BadHeaderError
-from django.http import HttpResponse
-from django.contrib.auth.forms import PasswordResetForm
+from django.core.mail import send_mail
 from django.template.loader import render_to_string
 from django.db.models.query_utils import Q
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
@@ -80,6 +78,7 @@ def login_view(request):
         return Response({"message": "Invalid credentials"}, status=status.HTTP_401_UNAUTHORIZED)
 
 @api_view(['GET'])
+@permission_classes([AllowAny])
 def home(request):
     trending_products = Product.objects.filter(trending_now=True)[:4]
     deal_products = Product.objects.filter(deals_of_the_day=True)[:4]
@@ -94,6 +93,7 @@ def home(request):
     return Response(data)
 
 @api_view(['GET'])
+@permission_classes([AllowAny])
 def product_list(request):
     products = Product.objects.all()
     category_id = request.GET.get('category')
@@ -117,6 +117,7 @@ def product_list(request):
     return Response({'product_data': product_data})
 
 @api_view(['GET'])
+@permission_classes([AllowAny])
 def product_detail(request, product_id):
     # Fetch the product or return 404
     product = get_object_or_404(Product, id=product_id)
@@ -418,28 +419,74 @@ def search_history(request):
 
 
 # submit_review_view
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
 def submit_review(request, product_id):
-    product = get_object_or_404(Product, id=product_id)
-
-    if request.method == "POST":
-        review_text = request.POST.get('review')
-        rating = int(request.POST.get('rating'))
-
-        existing_review = Review.objects.filter(product=product, user=request.user).first()
-
-        if existing_review:
-            return JsonResponse({'message': "You have already submitted a review for this product.", 'success': False})
-
-        new_review = Review.objects.create(
-            product=product,
-            user=request.user,
-            review_text=review_text,
+    try:
+        product = get_object_or_404(Product, id=product_id)
+        
+        # Check if user has already reviewed this product
+        if Review.objects.filter(product=product, user=request.user).exists():
+            return Response({
+                'status': 'error',
+                'message': 'You have already reviewed this product'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Validate the rating
+        rating = request.data.get('rating')
+        if not rating or not isinstance(rating, (int, float)) or not (1 <= float(rating) <= 5):
+            return Response({
+                'status': 'error',
+                'message': 'Please provide a valid rating between 1 and 5'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Create the review
+        review = Review.objects.create(
+            product=product,  # Pass the product object directly
+            user=request.user,  # Pass the user object directly
+            review=request.data.get('review', ''),
             rating=rating
         )
-        new_review.save()
-        return JsonResponse({'message': "Thank you for the review!", 'success': True})
+        
+        serializer = ReviewSerializer(review)
+        return Response({
+            'status': 'success',
+            'message': 'Review submitted successfully',
+            'review': serializer.data
+        }, status=status.HTTP_201_CREATED)
+            
+    except Exception as e:
+        return Response({
+            'status': 'error',
+            'message': str(e)
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-    return JsonResponse({'message': "Invalid request method.", 'success': False})
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def get_product_reviews(request, product_id):
+    """
+    Get all reviews for a specific product
+    """
+    try:
+        product = get_object_or_404(Product, id=product_id)
+        reviews = Review.objects.filter(product=product).order_by('-created_at')
+        serializer = ReviewSerializer(reviews, many=True)
+        
+        # Calculate average rating
+        avg_rating = reviews.aggregate(Avg('rating'))['rating__avg'] or 0
+        
+        return Response({
+            'status': 'success',
+            'reviews': serializer.data,
+            'total_reviews': reviews.count(),
+            'average_rating': round(avg_rating, 1)
+        })
+        
+    except Exception as e:
+        return Response({
+            'status': 'error',
+            'message': str(e)
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
@@ -606,3 +653,93 @@ def password_reset_confirm(request, uidb64, token):
             'status': 'error',
             'message': 'An error occurred while resetting your password'
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    
+
+@api_view(['PUT'])
+@permission_classes([IsAuthenticated])
+def update_profile(request):
+    user = request.user
+    serializer = UpdateProfileSerializer(user, data=request.data, partial=True)
+    
+    if serializer.is_valid():
+        # Validate email uniqueness if it's being changed
+        new_email = serializer.validated_data.get('email')
+        if new_email and new_email != user.email:
+            if NameUser.objects.filter(email=new_email).exists():
+                return Response(
+                    {'email': 'This email is already in use.'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+                
+        # Validate phone number uniqueness if it's being changed
+        new_phone = serializer.validated_data.get('phone_number')
+        if new_phone and new_phone != user.phone_number:
+            if NameUser.objects.filter(phone_number=new_phone).exists():
+                return Response(
+                    {'phone_number': 'This phone number is already in use.'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+        
+        serializer.save()
+        return Response(serializer.data)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def add_address(request):
+    serializer = SavedAddressSerializer(data=request.data)
+    if serializer.is_valid():
+        serializer.save(user=request.user)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated])
+def delete_address(request, address_id):
+    try:
+        address = SavedAddress.objects.get(id=address_id, user=request.user)
+        address.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+    except SavedAddress.DoesNotExist:
+        return Response(status=status.HTTP_404_NOT_FOUND)
+    
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_wishlist(request):
+    wishlist_items = Wishlist.objects.filter(user=request.user).select_related('product')
+    serializer = WishlistSerializer(wishlist_items, many=True)
+    return Response(serializer.data)
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def toggle_wishlist(request, product_id):
+    try:
+        product = Product.objects.get(id=product_id)
+        wishlist_item = Wishlist.objects.filter(user=request.user, product=product)
+        
+        if wishlist_item.exists():
+            wishlist_item.delete()
+            return Response({'status': 'removed', 'message': 'Removed from wishlist'})
+        else:
+            Wishlist.objects.create(user=request.user, product=product)
+            return Response({'status': 'added', 'message': 'Added to wishlist'})
+            
+    except Product.DoesNotExist:
+        return Response({'message': 'Product not found'}, status=404)
+
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated])
+def remove_from_wishlist(request, product_id):
+    try:
+        wishlist_item = Wishlist.objects.get(user=request.user, product_id=product_id)
+        wishlist_item.delete()
+        return Response({'message': 'Item removed from wishlist'})
+    except Wishlist.DoesNotExist:
+        return Response({'message': 'Item not found in wishlist'}, status=404)
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def check_wishlist_status(request, product_id):
+    is_wishlisted = Wishlist.objects.filter(user=request.user, product_id=product_id).exists()
+    return Response({'is_wishlisted': is_wishlisted})

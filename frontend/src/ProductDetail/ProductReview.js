@@ -8,7 +8,7 @@ const Review = ({ productId }) => {
   useEffect(() => {
     const fetchReviews = async () => {
       try {
-        const response = await axiosInstance.get(`/product/${productId}/`);
+        const response = await axiosInstance.get(`/product/${productId}/reviews/`);
         setReviews(response.data.reviews);
       } catch (error) {
         console.error("Error fetching reviews:", error);
@@ -16,7 +16,7 @@ const Review = ({ productId }) => {
         setLoading(false);
       }
     };
-
+  
     fetchReviews();
   }, [productId]);
 
@@ -32,8 +32,8 @@ const Review = ({ productId }) => {
       ) : (
         reviews.map((review) => (
           <div key={review.id} className="border-b py-2">
-            <h3 className="font-medium">{review.user}</h3>
-            <p className="text-gray-600">{review.text}</p>
+            <h3 className="font-medium">{review.user.username}</h3>
+            <p className="text-gray-600">{review.review}</p>
             <div className="flex mt-1">
               {[...Array(5)].map((_, index) => (
                 <span key={index} className={`fa fa-star ${index < review.rating ? 'text-yellow-500' : 'text-gray-400'}`}></span>

@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
-from .models import NameUser, Category, Product, ProductImage, Cart, CartItem, Order, OrderItem, SearchHistory, Review, SavedAddress
+from .models import NameUser, Category, Product, ProductImage, Cart, CartItem, Order, OrderItem, SearchHistory, Review, SavedAddress, Wishlist
 
 # User Serializer
 
@@ -57,7 +57,6 @@ class CategorySerializer(serializers.ModelSerializer):
             return self.context['request'].build_absolute_uri(obj.image.url)
         return None
 
-
 # Product Serializer
 class ProductSerializer(serializers.ModelSerializer):
     discounted_price = serializers.ReadOnlyField() 
@@ -78,6 +77,12 @@ class ProductSerializer(serializers.ModelSerializer):
             return obj.main_image.url
         return None
 
+class WishlistSerializer(serializers.ModelSerializer):
+    product = ProductSerializer(read_only=True)
+    
+    class Meta:
+        model = Wishlist
+        fields = ['id', 'product', 'created_at']
 
 # Product Image Serializer (For Thumbnails)
 class ProductImageSerializer(serializers.ModelSerializer):
@@ -142,3 +147,23 @@ class SavedAddressSerializer(serializers.ModelSerializer):
     class Meta:
         model = SavedAddress
         fields = ['id', 'full_name', 'address_line1', 'address_line2', 'city', 'state', 'zip_code', 'country']
+
+
+class UpdateProfileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = NameUser
+        fields = ['full_name', 'email', 'phone_number']
+        
+    def validate_email(self, value):
+        user = self.instance
+        if value != user.email:
+            if NameUser.objects.filter(email=value).exists():
+                raise serializers.ValidationError("This email is already in use.")
+        return value
+        
+    def validate_phone_number(self, value):
+        user = self.instance
+        if value and value != user.phone_number:
+            if NameUser.objects.filter(phone_number=value).exists():
+                raise serializers.ValidationError("This phone number is already in use.")
+        return value

@@ -9,17 +9,21 @@ const ReviewForm = ({ productId, onReviewSubmitted }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-
+  
     try {
-      await axiosInstance.post(`/product/${productId}/submit-review/`, {
-        text,
-        rating,
+      const response = await axiosInstance.post(`/product/${productId}/submit-review/`, {
+        review: text, 
+        rating: rating,
       });
-      setText('');
-      setRating(5);
-      onReviewSubmitted(); // Call the function to refresh the reviews
+      
+      if (response.data.status === 'success') {
+        setText('');
+        setRating(5);
+        onReviewSubmitted(); // Call the function to refresh the reviews
+      }
     } catch (error) {
       console.error("Error submitting review:", error);
+      // Handle error (show error message to user)
     } finally {
       setLoading(false);
     }

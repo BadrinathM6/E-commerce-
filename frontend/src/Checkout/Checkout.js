@@ -30,6 +30,25 @@ const CheckoutPage = () => {
     return items.reduce((sum, item) => sum + (item.product.discounted_price * item.quantity), 0);
   };
 
+  // Helper function to format address for dropdown
+  const formatAddressForDropdown = (address) => {
+    const addressLine = address.address_line1.split(',')[0]; // Get just the first part of address
+    return `${addressLine}, ${address.city}`; // Short format for dropdown
+  };
+
+  // Helper function to remove duplicate addresses
+  const removeDuplicateAddresses = (addresses) => {
+    const seen = new Set();
+    return addresses.filter(address => {
+      const key = `${address.address_line1}-${address.city}-${address.state}-${address.zip_code}`;
+      if (seen.has(key)) {
+        return false;
+      }
+      seen.add(key);
+      return true;
+    });
+  };
+
   useEffect(() => {
     if (isBuyNow && buyNowProduct) {
       const buyNowItems = [{
@@ -63,9 +82,11 @@ const CheckoutPage = () => {
   const fetchSavedAddresses = async () => {
     try {
       const response = await axiosInstance.get('/saved-addresses/');
-      setSavedAddresses(response.data);
-      if (response.data.length > 0) {
-        setSelectedAddressId(response.data[0].id);
+      // Remove duplicate addresses before setting state
+      const uniqueAddresses = removeDuplicateAddresses(response.data);
+      setSavedAddresses(uniqueAddresses);
+      if (uniqueAddresses.length > 0) {
+        setSelectedAddressId(uniqueAddresses[0].id);
       }
     } catch (err) {
       console.error('Failed to fetch saved addresses:', err);
@@ -91,7 +112,6 @@ const CheckoutPage = () => {
     }
   };
 
-  
   const handleCheckout = async (e) => {
     e.preventDefault();
     try {
@@ -114,14 +134,12 @@ const CheckoutPage = () => {
 
       let response;
       if (isBuyNow) {
-        // Handle Buy Now checkout
         response = await axiosInstance.post('/buy-now-checkout/', {
           ...addressData,
           product_id: buyNowProduct.id,
           quantity: buyNowProduct.quantity
         });
       } else {
-        // Handle regular cart checkout
         response = await axiosInstance.post('/checkout/', addressData);
       }
 
@@ -179,7 +197,7 @@ const CheckoutPage = () => {
                 >
                   {savedAddresses.map(address => (
                     <option key={address.id} value={address.id}>
-                      {address.fullName}, {address.addressLine1}, {address.city}
+                      {formatAddressForDropdown(address)}
                     </option>
                   ))}
                   <option value={-1}>Add a new address</option>
@@ -201,6 +219,7 @@ const CheckoutPage = () => {
                     className="w-full px-3 py-2 border rounded"
                   />
                 </div>
+
                 <div className="mb-4">
                   <label htmlFor="addressLine1" className="block mb-2">Address Line 1</label>
                   <input
@@ -294,6 +313,6 @@ const CheckoutPage = () => {
       </div>
     </div>
   );
-};
+};;
 
 export default CheckoutPage;

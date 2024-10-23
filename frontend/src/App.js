@@ -14,6 +14,8 @@ import PasswordResetForm from './Login&Register/Password_reset';
 import PasswordResetConfirm from './Login&Register/PasswordConfirmation';
 import PasswordResetDone from './Login&Register/PasswordResetDone'
 import PasswordResetComplete from './Login&Register/ResetDone';
+import EditProfile from './Login&Register/UserProfileUpdate';
+import WishlistPage from './ProductDetail/WishListPage';
 
 const App = () =>{
   return(
@@ -33,6 +35,8 @@ const App = () =>{
         <Route path="/reset/:uidb64/:token" element={<PasswordResetConfirm />} />
         <Route path='/password-reset-complete' element={<PasswordResetDone/>}/>
         <Route path='/reset/done' element={<PasswordResetComplete/>} />
+        <Route path='/user-profile-update' element={<EditProfile/>}/>
+        <Route path='/wishlist' element={<WishlistPage/>}/>
       </Routes>
     </Router>
   )

@@ -1,6 +1,7 @@
 from django.db import models
 import os
 from django.contrib.auth.models import AbstractUser
+from django.forms import ValidationError
 from django.utils import timezone
 
 def image_upload_path(instance, filename):
@@ -30,6 +31,14 @@ class Category(models.Model):
 
     def __str__(self):
         return self.name
+    
+class Wishlist(models.Model):
+    user = models.ForeignKey(NameUser, on_delete=models.CASCADE, related_name='wishlist')
+    product = models.ForeignKey('Product', on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('user', 'product')
 
 # Product Model
 class Product(models.Model):
@@ -102,6 +111,20 @@ class Order(models.Model):
     shipping_address = models.CharField(max_length=500)
     ordered_at = models.DateTimeField(auto_now_add=True)
     status = models.CharField(max_length=255, default='Pending')
+
+    def clean(self):
+        # Validate that user exists
+        if not NameUser.objects.filter(id=self.user_id).exists():
+            raise ValidationError({'user': 'Selected user does not exist'})
+        
+        # Validate related OrderItems
+        for item in self.items.all():
+            if item.product and not Product.objects.filter(id=item.product_id).exists():
+                raise ValidationError({'items': f'Product with id {item.product_id} does not exist'})
+
+    def save(self, *args, **kwargs):
+        self.clean()
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return f"Order {self.id} by {self.user.username}"
