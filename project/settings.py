@@ -40,7 +40,7 @@ SECRET_KEY = os.environ.get('SECRET_KEY')
 DEBUG = False
 
 ALLOWED_HOSTS = [
-    'your-vercel-app.vercel.app'
+    'https://djangoecommrce.vercel.app/'
 ]
 
 REST_FRAMEWORK = {
