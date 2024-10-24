@@ -34,7 +34,7 @@ FRONTEND_PROTOCOL = 'https'
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.environ.get('SECRET_KEY') 
+SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-g_%)6vg)y2!=5$^+qz99^ehg*ore^k5o5y_9ec0&+wql2at9fl') 
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
