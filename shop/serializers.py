@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
-from .models import NameUser, Category, Product, ProductImage, Cart, CartItem, Order, OrderItem, SearchHistory, Review, SavedAddress, Wishlist
+from .models import NameUser, Category, Product, ProductImage, Cart, CartItem, Order, OrderItem, SearchHistory, Review, SavedAddress, Wishlist, PaymentOrder
 
 # User Serializer
 
@@ -167,3 +167,11 @@ class UpdateProfileSerializer(serializers.ModelSerializer):
             if NameUser.objects.filter(phone_number=value).exists():
                 raise serializers.ValidationError("This phone number is already in use.")
         return value
+    
+from rest_framework import serializers
+from .models import PaymentOrder
+
+class PaymentOrderSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PaymentOrder
+        fields = ['id', 'razorpay_order_id', 'amount', 'currency', 'status']

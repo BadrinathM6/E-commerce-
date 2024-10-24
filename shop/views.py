@@ -1,4 +1,3 @@
-from audioop import avg
 import logging
 import os
 import base64
@@ -7,11 +6,12 @@ from django.shortcuts import get_object_or_404
 from django.db.models import Q
 from django.http import JsonResponse
 from django.contrib.auth import get_user_model
+import razorpay
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
-from .models import NameUser,Category, Product, Cart, CartItem, SearchHistory, Review, Order, OrderItem, SavedAddress, Wishlist
+from .models import NameUser,Category, PaymentOrder, Product, Cart, CartItem, SearchHistory, Review, Order, OrderItem, SavedAddress, Wishlist
 from .serializers import NameUserSerializer, OrderSerializer, ProductSerializer, CartItemSerializer, CategorySerializer, ReviewSerializer, SavedAddressSerializer, UpdateProfileSerializer, WishlistSerializer
 from django.contrib.auth import authenticate
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -372,7 +372,7 @@ def order_List(request):
     orders = Order.objects.filter(user=request.user).order_by('-ordered_at')
 
     if not orders.exists():
-        return Response({'message': 'No orders found.'}, status=404)
+        return Response({'orders': [], 'message': 'No orders found.'}, status=200)
 
     serializer = OrderSerializer(orders, many=True)
 
@@ -743,3 +743,83 @@ def remove_from_wishlist(request, product_id):
 def check_wishlist_status(request, product_id):
     is_wishlisted = Wishlist.objects.filter(user=request.user, product_id=product_id).exists()
     return Response({'is_wishlisted': is_wishlisted})
+
+client = razorpay.Client(auth=(os.getenv('RAZORPAY_KEY_ID'), os.getenv('RAZORPAY_KEY_SECRET')))
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def create_payment(request):
+    try:
+        order_id = request.data.get('order_id')
+        order = Order.objects.get(id=order_id, user=request.user)
+        
+        # Convert amount to paise (Razorpay expects amount in smallest currency unit)
+        amount_in_paise = int(float(order.total_price) * 100)
+        
+        # Create Razorpay Order
+        razorpay_order = client.order.create({
+            'amount': amount_in_paise,
+            'currency': 'INR',
+            'payment_capture': 1,
+            'notes': {
+                'order_id': str(order.id),
+                'user_id': str(request.user.id)
+            }
+        })
+        
+        # Create PaymentOrder in database
+        payment_order = PaymentOrder.objects.create(
+            user=request.user,
+            order=order,
+            razorpay_order_id=razorpay_order['id'],
+            amount=order.total_price,
+            currency='INR'
+        )
+        
+        return Response({
+            'order_id': razorpay_order['id'],
+            'amount': amount_in_paise,
+            'currency': 'INR',
+            'key': os.environ.get('RAZORPAY_KEY_ID')
+        })
+        
+    except Exception as e:
+        return Response({
+            'error': str(e)
+        }, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def verify_payment(request):
+    try:
+        razorpay_order_id = request.data.get('razorpay_order_id')
+        razorpay_payment_id = request.data.get('razorpay_payment_id')
+        razorpay_signature = request.data.get('razorpay_signature')
+        
+        # Verify signature
+        params_dict = {
+            'razorpay_order_id': razorpay_order_id,
+            'razorpay_payment_id': razorpay_payment_id,
+            'razorpay_signature': razorpay_signature
+        }
+        
+        client.utility.verify_payment_signature(params_dict)
+        
+        # Update payment status
+        payment_order = PaymentOrder.objects.get(razorpay_order_id=razorpay_order_id)
+        payment_order.razorpay_payment_id = razorpay_payment_id
+        payment_order.razorpay_signature = razorpay_signature
+        payment_order.status = 'completed'
+        payment_order.save()
+        
+        # Update order status
+        order = payment_order.order
+        order.status = 'paid'
+        order.save()
+        
+        return Response({'status': 'Payment verified successfully'})
+        
+    except Exception as e:
+        return Response({
+            'error': str(e)
+        }, status=status.HTTP_400_BAD_REQUEST)

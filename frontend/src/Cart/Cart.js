@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import axiosInstance from '../utils/axiosConfig'; // Adjust the import path as needed
+import axiosInstance from '../utils/axiosConfig';
+import EmptyCart from './CartEmpty';
 
 const Cart = () => {
   const [cartData, setCartData] = useState(null);
@@ -102,7 +103,7 @@ const Cart = () => {
 
   if (isLoading) return <div>Loading...</div>;
   if (error) return <div className="text-red-500">{error}</div>;
-  if (!cartData || cartData.cart_items.length === 0) return <div>Your cart is empty.</div>;
+  if (!cartData || cartData.cart_items.length === 0) return <EmptyCart />;
 
   return (
     <div className="bg-gray-100 min-h-screen pb-[100px] overflow-y-auto">

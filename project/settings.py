@@ -27,19 +27,21 @@ EMAIL_USE_TLS = True
 EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER')  # Your Gmail address
 EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD')
 
-FRONTEND_DOMAIN = 'localhost:3000'  # Change this for production
-FRONTEND_PROTOCOL = 'http' 
+FRONTEND_DOMAIN = os.environ.get('FRONTEND_DOMAIN', 'your-firebase-app.web.app')  # Change this for production
+FRONTEND_PROTOCOL = 'https' 
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-g_%)6vg)y2!=5$^+qz99^ehg*ore^k5o5y_9ec0&+wql2at9fl'
+SECRET_KEY = os.environ.get('SECRET_KEY') 
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
-ALLOWED_HOSTS = ["*"]
+ALLOWED_HOSTS = [
+    'your-vercel-app.vercel.app'
+]
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
@@ -48,11 +50,16 @@ REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.IsAuthenticated',  # Use authentication for all views
     ],
+    'DEFAULT_RENDERER_CLASSES': (
+        'rest_framework.renderers.JSONRenderer',
+    ) 
 }
 
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(minutes=30),  # Access token valid for 30 minutes
     'REFRESH_TOKEN_LIFETIME': timedelta(days=1),  # Refresh token valid for 1 day
+    'ROTATE_REFRESH_TOKENS': True,
+    'BLACKLIST_AFTER_ROTATION': True,
 }
 
 # Application definition
@@ -77,9 +84,10 @@ ASGI_APPLICATION = 'project.asgi.application'
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
-    # 'django.middleware.csrf.CsrfViewMiddleware',
+    'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
@@ -116,19 +124,23 @@ DATABASES = {
     }
 }
 
-# CSRF_COOKIE_SAMESITE = 'Lax'
-# CSRF_COOKIE_SECURE = False  # Set to True in production with HTTPS
-# CSRF_COOKIE_HTTPONLY = False
-# CSRF_USE_SESSIONS = False
+SECURE_SSL_REDIRECT = True
+SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_SECURE = True
+SECURE_BROWSER_XSS_FILTER = True
+SECURE_CONTENT_TYPE_NOSNIFF = True
+SECURE_HSTS_SECONDS = 31536000  # 1 year
+SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+SECURE_HSTS_PRELOAD = True
+X_FRAME_OPTIONS = 'DENY'
 
-CORS_ALLOW_ALL_ORIGINS = True  # Keep this False for security
-CORS_ALLOW_CREDENTIALS = True
+
+
+CORS_ALLOW_ALL_ORIGINS = False
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:3000",
-    "http://127.0.0.1:3000"
+    f"https://{os.environ.get('FRONTEND_DOMAIN', 'your-firebase-app.web.app')}"
 ]
-
-# CSRF_TRUSTED_ORIGINS = CORS_ALLOWED_ORIGINS  # Make this consistent with CORS_ALLOWED_ORIGINS
+CORS_ALLOW_CREDENTIALS = True
 
 # Password validation
 # https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators
@@ -165,11 +177,14 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
 
 STATIC_URL = '/static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
-LOGIN_URL = 'http://localhost:3000/login'
+LOGIN_URL = f"https://{os.environ.get('FRONTEND_DOMAIN')}/login"
 
 AUTH_USER_MODEL = 'shop.NameUser'
 

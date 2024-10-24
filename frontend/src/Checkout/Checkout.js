@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import axiosInstance from '../utils/axiosConfig';
 import { useNavigate, useLocation } from 'react-router-dom';
 import Swal from 'sweetalert2';
+import axiosInstance from '../utils/axiosConfig'
 
 const CheckoutPage = () => {
   const [cartItems, setCartItems] = useState([]);

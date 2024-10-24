@@ -16,6 +16,7 @@ import PasswordResetDone from './Login&Register/PasswordResetDone'
 import PasswordResetComplete from './Login&Register/ResetDone';
 import EditProfile from './Login&Register/UserProfileUpdate';
 import WishlistPage from './ProductDetail/WishListPage';
+import PaymentComponent from './Checkout/RazorPayment';
 
 const App = () =>{
   return(
@@ -37,6 +38,7 @@ const App = () =>{
         <Route path='/reset/done' element={<PasswordResetComplete/>} />
         <Route path='/user-profile-update' element={<EditProfile/>}/>
         <Route path='/wishlist' element={<WishlistPage/>}/>
+        {/* <Route path='/Razorpay' element={<PaymentComponent/>}/> */}
       </Routes>
     </Router>
   )
