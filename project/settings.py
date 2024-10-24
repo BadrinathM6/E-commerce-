@@ -40,7 +40,7 @@ SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-g_%)6vg)y2!=5$^+qz99^
 DEBUG = False
 
 ALLOWED_HOSTS = [
-    'rolexcart-1kg998bk0-badrinaths-projects-3fa290f4.vercel.app',
+    '*'
 ]
 
 REST_FRAMEWORK = {
