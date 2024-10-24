@@ -6,7 +6,6 @@ from django.shortcuts import get_object_or_404
 from django.db.models import Q
 from django.http import JsonResponse
 from django.contrib.auth import get_user_model
-import razorpay
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated, AllowAny
@@ -22,9 +21,6 @@ from django.db.models.query_utils import Q
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.contrib.auth.tokens import default_token_generator
 from django.utils.encoding import force_bytes
-from mailjet_rest import Client
-
-mailjet = Client(auth=(os.getenv('MAILJET_API_KEY'), os.getenv('MAILJET_API_SECRET')), version='v3.1')
 
 logger = logging.getLogger(__name__)
 
@@ -744,82 +740,82 @@ def check_wishlist_status(request, product_id):
     is_wishlisted = Wishlist.objects.filter(user=request.user, product_id=product_id).exists()
     return Response({'is_wishlisted': is_wishlisted})
 
-client = razorpay.Client(auth=(os.getenv('RAZORPAY_KEY_ID'), os.getenv('RAZORPAY_KEY_SECRET')))
+# client = razorpay.Client(auth=(os.getenv('RAZORPAY_KEY_ID'), os.getenv('RAZORPAY_KEY_SECRET')))
 
-@api_view(['POST'])
-@permission_classes([IsAuthenticated])
-def create_payment(request):
-    try:
-        order_id = request.data.get('order_id')
-        order = Order.objects.get(id=order_id, user=request.user)
+# @api_view(['POST'])
+# @permission_classes([IsAuthenticated])
+# def create_payment(request):
+#     try:
+#         order_id = request.data.get('order_id')
+#         order = Order.objects.get(id=order_id, user=request.user)
         
-        # Convert amount to paise (Razorpay expects amount in smallest currency unit)
-        amount_in_paise = int(float(order.total_price) * 100)
+#         # Convert amount to paise (Razorpay expects amount in smallest currency unit)
+#         amount_in_paise = int(float(order.total_price) * 100)
         
-        # Create Razorpay Order
-        razorpay_order = client.order.create({
-            'amount': amount_in_paise,
-            'currency': 'INR',
-            'payment_capture': 1,
-            'notes': {
-                'order_id': str(order.id),
-                'user_id': str(request.user.id)
-            }
-        })
+#         # Create Razorpay Order
+#         razorpay_order = client.order.create({
+#             'amount': amount_in_paise,
+#             'currency': 'INR',
+#             'payment_capture': 1,
+#             'notes': {
+#                 'order_id': str(order.id),
+#                 'user_id': str(request.user.id)
+#             }
+#         })
         
-        # Create PaymentOrder in database
-        payment_order = PaymentOrder.objects.create(
-            user=request.user,
-            order=order,
-            razorpay_order_id=razorpay_order['id'],
-            amount=order.total_price,
-            currency='INR'
-        )
+#         # Create PaymentOrder in database
+#         payment_order = PaymentOrder.objects.create(
+#             user=request.user,
+#             order=order,
+#             razorpay_order_id=razorpay_order['id'],
+#             amount=order.total_price,
+#             currency='INR'
+#         )
         
-        return Response({
-            'order_id': razorpay_order['id'],
-            'amount': amount_in_paise,
-            'currency': 'INR',
-            'key': os.environ.get('RAZORPAY_KEY_ID')
-        })
+#         return Response({
+#             'order_id': razorpay_order['id'],
+#             'amount': amount_in_paise,
+#             'currency': 'INR',
+#             'key': os.environ.get('RAZORPAY_KEY_ID')
+#         })
         
-    except Exception as e:
-        return Response({
-            'error': str(e)
-        }, status=status.HTTP_400_BAD_REQUEST)
+#     except Exception as e:
+#         return Response({
+#             'error': str(e)
+#         }, status=status.HTTP_400_BAD_REQUEST)
 
-@api_view(['POST'])
-@permission_classes([IsAuthenticated])
-def verify_payment(request):
-    try:
-        razorpay_order_id = request.data.get('razorpay_order_id')
-        razorpay_payment_id = request.data.get('razorpay_payment_id')
-        razorpay_signature = request.data.get('razorpay_signature')
+# @api_view(['POST'])
+# @permission_classes([IsAuthenticated])
+# def verify_payment(request):
+#     try:
+#         razorpay_order_id = request.data.get('razorpay_order_id')
+#         razorpay_payment_id = request.data.get('razorpay_payment_id')
+#         razorpay_signature = request.data.get('razorpay_signature')
         
-        # Verify signature
-        params_dict = {
-            'razorpay_order_id': razorpay_order_id,
-            'razorpay_payment_id': razorpay_payment_id,
-            'razorpay_signature': razorpay_signature
-        }
+#         # Verify signature
+#         params_dict = {
+#             'razorpay_order_id': razorpay_order_id,
+#             'razorpay_payment_id': razorpay_payment_id,
+#             'razorpay_signature': razorpay_signature
+#         }
         
-        client.utility.verify_payment_signature(params_dict)
+#         client.utility.verify_payment_signature(params_dict)
         
-        # Update payment status
-        payment_order = PaymentOrder.objects.get(razorpay_order_id=razorpay_order_id)
-        payment_order.razorpay_payment_id = razorpay_payment_id
-        payment_order.razorpay_signature = razorpay_signature
-        payment_order.status = 'completed'
-        payment_order.save()
+#         # Update payment status
+#         payment_order = PaymentOrder.objects.get(razorpay_order_id=razorpay_order_id)
+#         payment_order.razorpay_payment_id = razorpay_payment_id
+#         payment_order.razorpay_signature = razorpay_signature
+#         payment_order.status = 'completed'
+#         payment_order.save()
         
-        # Update order status
-        order = payment_order.order
-        order.status = 'paid'
-        order.save()
+#         # Update order status
+#         order = payment_order.order
+#         order.status = 'paid'
+#         order.save()
         
-        return Response({'status': 'Payment verified successfully'})
+#         return Response({'status': 'Payment verified successfully'})
         
-    except Exception as e:
-        return Response({
-            'error': str(e)
-        }, status=status.HTTP_400_BAD_REQUEST)
+#     except Exception as e:
+#         return Response({
+#             'error': str(e)
+#         }, status=status.HTTP_400_BAD_REQUEST)
