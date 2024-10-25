@@ -27,7 +27,7 @@ EMAIL_USE_TLS = True
 EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER')  # Your Gmail address
 EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD')
 
-FRONTEND_DOMAIN = os.environ.get('FRONTEND_DOMAIN', 'your-firebase-app.web.app')  # Change this for production
+FRONTEND_DOMAIN = os.environ.get('FRONTEND_DOMAIN', 'https://rolexcart-ecomerce.web.app')  # Change this for production
 FRONTEND_PROTOCOL = 'https' 
 
 # Quick-start development settings - unsuitable for production
@@ -138,7 +138,7 @@ X_FRAME_OPTIONS = 'DENY'
 
 CORS_ALLOW_ALL_ORIGINS = False
 CORS_ALLOWED_ORIGINS = [
-    f"https://{os.environ.get('FRONTEND_DOMAIN', 'your-firebase-app.web.app')}"
+    f"https://{os.environ.get('FRONTEND_DOMAIN', 'https://rolexcart-ecomerce.web.app')}"
 ]
 CORS_ALLOW_CREDENTIALS = True
 

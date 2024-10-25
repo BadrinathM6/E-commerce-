@@ -48,7 +48,7 @@ const CategoryList = () => {
                 <ul className="flex space-x-6">
                     {categories.map((category, index) => (
                         <li key={category.id ? category.id : `category-${index}`} className="inline-block text-center">
-                            <a href={`http://127.0.0.1:3000/product-list?category=${category.id}`}>
+                            <a href={`https://rolexcart-ecomerce.web.app/product-list?category=${category.id}`}>
                                 <img className="w-12 h-12 object-cover rounded-full mb-2" 
                                      src={category.image_url}
                                      alt={category.name} />
