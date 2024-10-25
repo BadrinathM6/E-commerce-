@@ -39,6 +39,14 @@ SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-g_%)6vg)y2!=5$^+qz99^
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
+DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
+
+CLOUDINARY_STORAGE = {
+    'CLOUD_NAME': os.environ.get('CLOUD_NAME'),
+    'API_KEY': os.environ.get('API_KEY'),
+    'API_SECRET': os.environ.get('API_SECRET')
+}
+
 ALLOWED_HOSTS = [
     '*'
 ]
@@ -76,6 +84,8 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt',
     'corsheaders',
     'channels',
+    'cloudinary',
+    'cloudinary_storage',
     'shop'
 ]
 
