@@ -93,8 +93,11 @@ class ProductSerializer(serializers.ModelSerializer):
         ]
 
     def get_main_image(self, obj):
-        if obj.main_image:
-            return obj.main_image.url
+        if obj.main_image and hasattr(obj.main_image, 'url'):
+            # Get the public ID and resource type from Cloudinary
+            public_id = obj.main_image.public_id
+            # Format URL to match the deal products format
+            return f"https://res.cloudinary.com/dmohbdzs1/image/upload/{public_id}"
         return None
 
 class WishlistSerializer(serializers.ModelSerializer):
