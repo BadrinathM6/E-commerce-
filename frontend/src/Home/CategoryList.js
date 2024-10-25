@@ -11,12 +11,22 @@ const CategoryList = () => {
     // Helper function to get complete image URL
     const getImageUrl = (imagePath) => {
         if (!imagePath) return '/placeholder-image.jpg';
-        
-        // Remove any leading slash to prevent double slashes
-        const cleanPath = imagePath.startsWith('/https') ? imagePath.slice(1) : imagePath;
-        
-        // Construct the full URL
-        return `${API_BASE_URL}/${cleanPath}`;
+    
+        // Decode the percent-encoded characters
+        let decodedPath = decodeURIComponent(imagePath);
+    
+        // Trim any extra newlines or whitespace
+        decodedPath = decodedPath.trim();
+    
+        // Check if the decodedPath contains a second 'https' and extract it
+        const httpsIndex = decodedPath.indexOf('https');
+        if (httpsIndex !== -1) {
+            // Remove everything before the second 'https' to get the correct URL
+            decodedPath = decodedPath.slice(httpsIndex);
+        }
+    
+        // Return the final cleaned URL
+        return decodedPath;
     };
 
     useEffect(() => {
