@@ -93,19 +93,27 @@ class ProductSerializer(serializers.ModelSerializer):
         ]
 
     def get_main_image(self, obj):
-        if obj.main_image and hasattr(obj.main_image, 'url'):
-            # Extract just the public ID and version
-            url = obj.main_image.url
-            # Check if it's a valid Cloudinary URL
-            if 'cloudinary.com' in url:
-                # Extract just the version and public ID part
-                parts = url.split('upload/')
-                if len(parts) > 1:
-                    version_and_id = parts[-1]  # This gets everything after 'upload/'
-                    # Construct a clean URL
-                    return f"https://res.cloudinary.com/dmohbdzs1/image/upload/{version_and_id}"
-            return url
-        return None
+        if not obj.main_image:
+            return None
+            
+        # Get the raw URL string
+        url = obj.main_image.url
+        
+        # Check if it's a Cloudinary URL
+        if 'cloudinary.com' in url:
+            try:
+                # Find the position of the actual Cloudinary URL
+                cloudinary_start = url.find('https://', url.find('cloudinary.com') - 8)
+                if cloudinary_start != -1:
+                    url = url[cloudinary_start:]
+                    # Clean up the URL
+                    url = url.replace('\n', '').strip()
+                    return url
+            except Exception as e:
+                print(f"Error processing Cloudinary URL: {e}")
+                return url
+                
+        return url
 
 class WishlistSerializer(serializers.ModelSerializer):
     product = ProductSerializer(read_only=True)
