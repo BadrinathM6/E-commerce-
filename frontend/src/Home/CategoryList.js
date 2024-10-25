@@ -12,17 +12,15 @@ const CategoryList = () => {
         // Decode the percent-encoded characters like %3A to :
         let decodedPath = decodeURIComponent(imagePath);
     
-        // Remove any newlines or extra whitespace
-        decodedPath = decodedPath.replace(/\s+/g, ''); // Remove all newline or space characters
-    
-        // If the path contains a second 'https', slice it from that point
-        const httpsIndex = decodedPath.indexOf('https');
+        // If the path contains 'https' after the initial part (media), slice it from that point
+        const httpsIndex = decodedPath.indexOf('https://', 1);  // Look for the second occurrence of 'https://'
         if (httpsIndex !== -1) {
-            decodedPath = decodedPath.slice(httpsIndex);
+            decodedPath = decodedPath.slice(httpsIndex);  // Slice from second occurrence of 'https'
         }
     
         return decodedPath;
     };
+    
 
     useEffect(() => {
         axiosInstance.get('') // Make sure this is the correct endpoint
