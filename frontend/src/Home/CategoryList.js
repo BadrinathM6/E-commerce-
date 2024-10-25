@@ -6,26 +6,21 @@ const CategoryList = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
-    const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://djangoecommrce.vercel.app';
-
-    // Helper function to get complete image URL
     const getImageUrl = (imagePath) => {
         if (!imagePath) return '/placeholder-image.jpg';
     
-        // Decode the percent-encoded characters
+        // Decode the percent-encoded characters like %3A to :
         let decodedPath = decodeURIComponent(imagePath);
     
-        // Trim any extra newlines or whitespace
-        decodedPath = decodedPath.trim();
+        // Remove any newlines or extra whitespace
+        decodedPath = decodedPath.replace(/\s+/g, ''); // Remove all newline or space characters
     
-        // Check if the decodedPath contains a second 'https' and extract it
+        // If the path contains a second 'https', slice it from that point
         const httpsIndex = decodedPath.indexOf('https');
         if (httpsIndex !== -1) {
-            // Remove everything before the second 'https' to get the correct URL
             decodedPath = decodedPath.slice(httpsIndex);
         }
     
-        // Return the final cleaned URL
         return decodedPath;
     };
 
