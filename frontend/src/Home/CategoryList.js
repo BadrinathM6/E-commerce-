@@ -6,30 +6,6 @@ const CategoryList = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
-    const getImageUrl = (imageUrl) => {
-        if (!imageUrl) return '/placeholder-image.jpg';
-        
-        try {
-            // Decode the URL first
-            let decodedUrl = decodeURIComponent(imageUrl);
-            
-            // Remove any newline characters and trailing/leading whitespace
-            decodedUrl = decodedUrl.replace(/\n/g, '').trim();
-            
-            // Extract the Cloudinary URL
-            const match = decodedUrl.match(/(https:\/\/res\.cloudinary\.com\/[^\/]+\/image\/upload\/[^\/\n\s]+)/);
-            
-            if (match) {
-                return match[0]; // Return the matched Cloudinary URL
-            }
-            
-            return '/placeholder-image.jpg';
-        } catch (error) {
-            console.error('Error processing image URL:', error);
-            return '/placeholder-image.jpg';
-        }
-    };
-
     // Rest of your component remains the same...
     useEffect(() => {
         axiosInstance.get('') // Make sure this is the correct endpoint
@@ -76,7 +52,7 @@ const CategoryList = () => {
                             <a href={`https://rolexcart-ecomerce.web.app/product-list?category=${category.id}`}>
                                 <img 
                                     className="w-12 h-12 object-cover rounded-full mb-2" 
-                                    src={getImageUrl(category.image_url)}
+                                    src={category.image_url}
                                     alt={category.name}
                                     onError={(e) => {
                                         e.target.src = '/placeholder-image.jpg';

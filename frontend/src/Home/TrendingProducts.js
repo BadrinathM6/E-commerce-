@@ -6,24 +6,11 @@ const TrendingProducts = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
-    const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://djangoecommrce.vercel.app';
-
-    // Helper function to get complete image URL
-    const getImageUrl = (imagePath) => {
-        if (!imagePath) return '/placeholder-image.jpg';
-        
-        // Remove any leading slash to prevent double slashes
-        const cleanPath = imagePath.startsWith('/') ? imagePath.slice(1) : imagePath;
-        
-        // Construct the full URL
-        return `${API_BASE_URL}/${cleanPath}`;
-    };
-
     useEffect(() => {
         const fetchTrendingProducts = async () => {
             try {
                 setLoading(true);
-                const response = await axiosInstance.get('/api/trending-products/');
+                const response = await axiosInstance.get('');
                 console.log('API Response:', response.data); // Debug log
                 setTrendingProducts(response.data);
                 setError(null);
@@ -67,7 +54,7 @@ const TrendingProducts = () => {
                             <div className="relative w-full pb-[100%]">
                                 <img
                                     className="absolute inset-0 w-full h-full object-cover rounded-lg"
-                                    src={getImageUrl(product.main_image)}
+                                    src={product.main_image}
                                     alt={product.name}
                                     onError={(e) => {
                                         console.log('Image failed to load:', e.target.src); // Debug log
