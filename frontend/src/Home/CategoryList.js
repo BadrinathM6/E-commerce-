@@ -6,6 +6,19 @@ const CategoryList = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
+    const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://djangoecommrce.vercel.app';
+
+    // Helper function to get complete image URL
+    const getImageUrl = (imagePath) => {
+        if (!imagePath) return '/placeholder-image.jpg';
+        
+        // Remove any leading slash to prevent double slashes
+        const cleanPath = imagePath.startsWith('/https') ? imagePath.slice(1) : imagePath;
+        
+        // Construct the full URL
+        return `${API_BASE_URL}/${cleanPath}`;
+    };
+
     useEffect(() => {
         axiosInstance.get('') // Make sure this is the correct endpoint
         .then((response) => {
@@ -50,7 +63,7 @@ const CategoryList = () => {
                         <li key={category.id ? category.id : `category-${index}`} className="inline-block text-center">
                             <a href={`https://rolexcart-ecomerce.web.app/product-list?category=${category.id}`}>
                                 <img className="w-12 h-12 object-cover rounded-full mb-2" 
-                                     src={category.image_url}
+                                     src={getImageUrl(category.image_url)}
                                      alt={category.name} />
                                 <span className="text-sm text-blue-600">{category.name}</span>
                             </a>
