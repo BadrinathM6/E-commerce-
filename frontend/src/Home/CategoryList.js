@@ -6,21 +6,26 @@ const CategoryList = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
-    const getImageUrl = (imagePath) => {
-        if (!imagePath) return '/placeholder-image.jpg';
-    
-        // Decode the percent-encoded characters like %3A to :
-        let decodedPath = decodeURIComponent(imagePath);
-    
-        // If the path contains 'https' after the initial part (media), slice it from that point
-        const httpsIndex = decodedPath.indexOf('https://', 1);  // Look for the second occurrence of 'https://'
-        if (httpsIndex !== -1) {
-            decodedPath = decodedPath.slice(httpsIndex);  // Slice from second occurrence of 'https'
+    const getImageUrl = (imageUrl) => {
+        if (!imageUrl) return '/placeholder-image.jpg';
+        
+        try {
+            // Find the position of cloudinary.com in the URL
+            const cloudinaryIndex = imageUrl.indexOf('cloudinary.com');
+            if (cloudinaryIndex !== -1) {
+                // Find the https:// that comes just before cloudinary.com
+                const httpsIndex = imageUrl.lastIndexOf('https://', cloudinaryIndex);
+                if (httpsIndex !== -1) {
+                    // Extract and decode the cloudinary URL portion
+                    return decodeURIComponent(imageUrl.slice(httpsIndex));
+                }
+            }
+            return imageUrl; // Return original URL if no cloudinary URL found
+        } catch (error) {
+            console.error('Error processing image URL:', error);
+            return '/placeholder-image.jpg';
         }
-    
-        return decodedPath;
     };
-    
 
     useEffect(() => {
         axiosInstance.get('') // Make sure this is the correct endpoint
@@ -65,9 +70,14 @@ const CategoryList = () => {
                     {categories.map((category, index) => (
                         <li key={category.id ? category.id : `category-${index}`} className="inline-block text-center">
                             <a href={`https://rolexcart-ecomerce.web.app/product-list?category=${category.id}`}>
-                                <img className="w-12 h-12 object-cover rounded-full mb-2" 
-                                     src={getImageUrl(category.image_url)}
-                                     alt={category.name} />
+                                <img 
+                                    className="w-12 h-12 object-cover rounded-full mb-2" 
+                                    src={getImageUrl(category.image_url)}
+                                    alt={category.name}
+                                    onError={(e) => {
+                                        e.target.src = '/placeholder-image.jpg';
+                                    }}
+                                />
                                 <span className="text-sm text-blue-600">{category.name}</span>
                             </a>
                         </li>
