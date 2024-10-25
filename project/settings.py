@@ -40,8 +40,7 @@ SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-g_%)6vg)y2!=5$^+qz99^
 DEBUG = False
 
 ALLOWED_HOSTS = [
-    'rolexcart-ecomerce.web.app',
-    'djangoecommrce.vercel.app',
+    '*'
 ]
 
 REST_FRAMEWORK = {
