@@ -77,3 +77,5 @@ const DealProduct = () => {
         </div>
     );
 };
+
+export default DealProduct
