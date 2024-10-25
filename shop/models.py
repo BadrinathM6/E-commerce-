@@ -6,12 +6,6 @@ from django.utils import timezone
 from django.conf import settings
 from cloudinary.models import CloudinaryField
 
-def image_upload_path(instance, filename):
-    return os.path.join('product/', filename)
-    
-def category_image_upload_path(instance, filename):
-    return os.path.join('category/', filename)
-
 # User Model
 class NameUser(AbstractUser):
     email = models.EmailField(unique=True)

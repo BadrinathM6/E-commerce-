@@ -6,12 +6,26 @@ const TrendingProducts = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
+    const isValidImageUrl = (url) => {
+        if (!url) return false;
+        // Basic validation for Cloudinary URLs
+        return url.includes('cloudinary.com') && url.includes('/upload/');
+    };
+
+    const getValidImageUrl = (url) => {
+        if (!isValidImageUrl(url)) {
+            console.warn('Invalid image URL detected:', url);
+            return '/placeholder-image.jpg';
+        }
+        return url;
+    };
+
     useEffect(() => {
         const fetchTrendingProducts = async () => {
             try {
                 setLoading(true);
                 const response = await axiosInstance.get('');
-                console.log('API Response:', response.data); // Debug log
+                console.log('API Response:', response.data);
                 setTrendingProducts(response.data);
                 setError(null);
             } catch (err) {
@@ -54,10 +68,9 @@ const TrendingProducts = () => {
                             <div className="relative w-full pb-[100%]">
                                 <img
                                     className="absolute inset-0 w-full h-full object-cover rounded-lg"
-                                    src={product.main_image}
+                                    src={getValidImageUrl(product.main_image)}
                                     alt={product.name}
                                     onError={(e) => {
-                                        console.log('Image failed to load:', e.target.src); // Debug log
                                         e.target.onerror = null;
                                         e.target.src = '/placeholder-image.jpg';
                                     }}

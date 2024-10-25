@@ -94,10 +94,17 @@ class ProductSerializer(serializers.ModelSerializer):
 
     def get_main_image(self, obj):
         if obj.main_image and hasattr(obj.main_image, 'url'):
-            # Get the public ID and resource type from Cloudinary
-            public_id = obj.main_image.public_id
-            # Format URL to match the deal products format
-            return f"https://res.cloudinary.com/dmohbdzs1/image/upload/{public_id}"
+            # Extract just the public ID and version
+            url = obj.main_image.url
+            # Check if it's a valid Cloudinary URL
+            if 'cloudinary.com' in url:
+                # Extract just the version and public ID part
+                parts = url.split('upload/')
+                if len(parts) > 1:
+                    version_and_id = parts[-1]  # This gets everything after 'upload/'
+                    # Construct a clean URL
+                    return f"https://res.cloudinary.com/dmohbdzs1/image/upload/{version_and_id}"
+            return url
         return None
 
 class WishlistSerializer(serializers.ModelSerializer):
