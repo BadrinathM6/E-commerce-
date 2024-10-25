@@ -1,4 +1,5 @@
 from rest_framework import serializers
+import urllib.parse
 from django.contrib.auth import get_user_model
 from .models import NameUser, Category, Product, ProductImage, Cart, CartItem, Order, OrderItem, SearchHistory, Review, SavedAddress, Wishlist, PaymentOrder
 
@@ -53,9 +54,28 @@ class CategorySerializer(serializers.ModelSerializer):
         fields = ['id', 'name', 'image_url', 'slug']
 
     def get_image_url(self, obj):
-        if obj.image:
-            return self.context['request'].build_absolute_uri(obj.image.url)
-        return None
+        if not obj.image:
+            return None
+            
+        # Get the raw URL string
+        url = obj.image.url
+        
+        # Check if it's a Cloudinary URL
+        if 'cloudinary.com' in url:
+            # Extract the Cloudinary URL
+            try:
+                # Find the position of the actual Cloudinary URL
+                cloudinary_start = url.find('https://', url.find('cloudinary.com') - 8)
+                if cloudinary_start != -1:
+                    url = url[cloudinary_start:]
+                    # Clean up the URL
+                    url = url.replace('\n', '').strip()
+                    return url
+            except Exception as e:
+                print(f"Error processing Cloudinary URL: {e}")
+                return url
+                
+        return url
 
 # Product Serializer
 class ProductSerializer(serializers.ModelSerializer):

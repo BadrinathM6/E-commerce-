@@ -4,6 +4,7 @@ from django.contrib.auth.models import AbstractUser
 from django.forms import ValidationError
 from django.utils import timezone
 from django.conf import settings
+from cloudinary.models import CloudinaryField
 
 def image_upload_path(instance, filename):
     return os.path.join('product/', filename)
@@ -27,7 +28,7 @@ class NameUser(AbstractUser):
 # Category Model
 class Category(models.Model):
     name = models.CharField(max_length=255)
-    image = models.ImageField(upload_to=category_image_upload_path)
+    image = CloudinaryField('image')  # Changed from ImageField
     slug = models.SlugField(unique=True)
 
     def __str__(self):
