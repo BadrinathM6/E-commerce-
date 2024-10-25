@@ -34,7 +34,7 @@ const DealProduct = () => {
                 <div className="p-4">
                 <img
                     className="w-full h-50 object-cover rounded-lg"
-                    src={`http://localhost:8000${dealproduct.main_image}`}
+                    src={`https://djangoecommrce.vercel.app${dealproduct.main_image}`}
                     alt={dealproduct.name}
                 />
                 <p className="text-gray-800 mt-3 text-sm">{dealproduct.short_desc}</p>

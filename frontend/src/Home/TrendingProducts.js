@@ -34,7 +34,7 @@ const TrendingProducts = () => {
                 <div className="p-4">
                 <img
                     className="w-full h-50 object-cover rounded-lg"
-                    src={`http://localhost:8000${trending_product.main_image}`}
+                    src={`https://djangoecommrce.vercel.app${trending_product.main_image}`}
                     alt={trending_product.name}
                 />
                 <p className="text-gray-800 mt-3 text-sm">{trending_product.short_desc}</p>

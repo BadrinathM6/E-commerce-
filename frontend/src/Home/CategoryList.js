@@ -50,7 +50,7 @@ const CategoryList = () => {
                         <li key={category.id ? category.id : `category-${index}`} className="inline-block text-center">
                             <a href={`https://rolexcart-ecomerce.web.app/product-list?category=${category.id}`}>
                                 <img className="w-12 h-12 object-cover rounded-full mb-2" 
-                                     src={category.image_url}
+                                     src={`https://djangoecommrce.vercel.app${category.image_url}`}
                                      alt={category.name} />
                                 <span className="text-sm text-blue-600">{category.name}</span>
                             </a>
