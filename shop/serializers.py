@@ -93,9 +93,27 @@ class ProductSerializer(serializers.ModelSerializer):
         ]
 
     def get_main_image(self, obj):
-        if obj.main_image:
-            return obj.main_image.url
-        return None
+        if not obj.main_image:
+            return None
+            
+        # Get the raw URL string
+        url = obj.main_image.url
+        
+        # Check if it's a Cloudinary URL
+        if 'cloudinary.com' in url:
+            try:
+                # Find the position of the actual Cloudinary URL
+                cloudinary_start = url.find('https://', url.find('cloudinary.com') - 8)
+                if cloudinary_start != -1:
+                    url = url[cloudinary_start:]
+                    # Clean up the URL
+                    url = url.replace('\n', '').strip()
+                    return url
+            except Exception as e:
+                print(f"Error processing Cloudinary URL: {e}")
+                return url
+                
+        return url
 
 class WishlistSerializer(serializers.ModelSerializer):
     product = ProductSerializer(read_only=True)
@@ -106,9 +124,34 @@ class WishlistSerializer(serializers.ModelSerializer):
 
 # Product Image Serializer (For Thumbnails)
 class ProductImageSerializer(serializers.ModelSerializer):
+    image = serializers.SerializerMethodField()
+
     class Meta:
         model = ProductImage
         fields = ['id', 'product', 'image', 'is_thumbnail']
+
+    def get_image(self, obj):
+        if not obj.image:
+            return None
+            
+        # Get the raw URL string
+        url = obj.image.url
+        
+        # Check if it's a Cloudinary URL
+        if 'cloudinary.com' in url:
+            try:
+                # Find the position of the actual Cloudinary URL
+                cloudinary_start = url.find('https://', url.find('cloudinary.com') - 8)
+                if cloudinary_start != -1:
+                    url = url[cloudinary_start:]
+                    # Clean up the URL
+                    url = url.replace('\n', '').strip()
+                    return url
+            except Exception as e:
+                print(f"Error processing Cloudinary URL: {e}")
+                return url
+                
+        return url
 
 
 # Cart Serializer
