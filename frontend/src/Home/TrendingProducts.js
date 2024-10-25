@@ -10,15 +10,12 @@ const TrendingProducts = () => {
 
     // Helper function to get complete image URL
     const getImageUrl = (imagePath) => {
-        if (!imagePath) return ''; // Handle null/undefined image paths
+        if (!imagePath) return '/placeholder-image.jpg';
         
-        // If the image path is already a full URL, return it as is
-        if (imagePath.startsWith('http')) {
-            return imagePath;
-        }
-        
-        // Remove any leading slash to avoid double slashes
+        // Remove any leading slash to prevent double slashes
         const cleanPath = imagePath.startsWith('/') ? imagePath.slice(1) : imagePath;
+        
+        // Construct the full URL
         return `${API_BASE_URL}/${cleanPath}`;
     };
 
@@ -26,8 +23,9 @@ const TrendingProducts = () => {
         const fetchTrendingProducts = async () => {
             try {
                 setLoading(true);
-                const response = await axiosInstance.get('/trending-products/'); // Adjust this endpoint to match your backend
-                setTrendingProducts(response.data.trending_products);
+                const response = await axiosInstance.get('/api/trending-products/');
+                console.log('API Response:', response.data); // Debug log
+                setTrendingProducts(response.data);
                 setError(null);
             } catch (err) {
                 console.error("Error fetching trending products:", err);
@@ -66,23 +64,29 @@ const TrendingProducts = () => {
                         className="block bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300"
                     >
                         <div className="p-4">
-                            <div className="aspect-w-1 aspect-h-1 w-full overflow-hidden rounded-lg">
+                            <div className="relative w-full pb-[100%]">
                                 <img
-                                    className="w-full h-48 object-cover rounded-lg"
+                                    className="absolute inset-0 w-full h-full object-cover rounded-lg"
                                     src={getImageUrl(product.main_image)}
                                     alt={product.name}
                                     onError={(e) => {
+                                        console.log('Image failed to load:', e.target.src); // Debug log
                                         e.target.onerror = null;
-                                        e.target.src = '/placeholder-image.jpg'; // Add a placeholder image
+                                        e.target.src = '/placeholder-image.jpg';
                                     }}
                                 />
                             </div>
-                            <p className="text-gray-800 mt-3 text-sm line-clamp-2">
-                                {product.short_desc}
-                            </p>
-                            <h6 className="text-lg font-bold mt-2 text-green-600">
-                                {product.short_disc}
-                            </h6>
+                            <div className="mt-4">
+                                <h3 className="text-sm font-medium text-gray-900">
+                                    {product.short_name}
+                                </h3>
+                                <p className="mt-1 text-sm text-gray-500">
+                                    {product.short_desc}
+                                </p>
+                                <p className="mt-2 text-lg font-bold text-green-600">
+                                    {product.short_disc}
+                                </p>
+                            </div>
                         </div>
                     </a>
                 ))
