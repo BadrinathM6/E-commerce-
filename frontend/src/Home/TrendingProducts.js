@@ -52,7 +52,7 @@ const TrendingProducts = () => {
         trendingProducts.map(product => (
           <a 
             key={product.id} 
-            href={`/product/${product.id}`}
+            href={`https://rolexcart-ecomerce.web.app/product/${product.id}`}
             className="block bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300"
           >
             <div className="p-4">

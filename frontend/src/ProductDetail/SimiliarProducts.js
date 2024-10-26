@@ -39,13 +39,13 @@ const SimilarProducts = ({ productId }) => {
       <div className="relative overflow-hidden">
         <div className="flex overflow-x-scroll space-x-4 scrollbar-hide no-scrollbar px-4 snap-x snap-mandatory">
           {similarProducts.map((product) => (
-            <a href={`/product/${product.id}`} key={product.id}>
+            <a href={`https://rolexcart-ecomerce.web.app/product/${product.id}`} key={product.id}>
               <div
                 key={product.id}
                 className="w-28 sm:w-[240px] border rounded-lg p-4 shadow-sm bg-white flex-shrink-0"
               >
                 <img
-                  src={`http://localhost:8000${product.main_image}`}
+                  src={product.main_image}
                   alt={product.name}
                   className="w-full h-auto rounded-lg mb-2"
                 />

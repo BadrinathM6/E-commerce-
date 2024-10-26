@@ -51,7 +51,7 @@ const DealProduct = () => {
         <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-6 px-4 py-8">
             {dealProducts.length > 0 ? (
                 dealProducts.map(product => (
-                    <a key={product.id} href={`/product/${product.id}`} 
+                    <a key={product.id} href={`https://rolexcart-ecomerce.web.app/product/${product.id}`} 
                        className="block bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300">
                         <div className="p-4">
                             <div className="relative w-full pb-[100%]">

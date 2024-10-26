@@ -44,7 +44,7 @@ const ProductImages = ({ productId }) => {
             <div className="relative">
                 <WishlistButton productId={productId} />
                 <img 
-                    src={`http://localhost:8000${mainImage}`} 
+                    src={mainImage}
                     alt={productData.name} 
                     className="w-full max-w-lg h-auto rounded-lg object-cover" 
                 />
@@ -55,7 +55,7 @@ const ProductImages = ({ productId }) => {
                 {productData.thumbnails.map((thumbnail, index) => (
                     <img
                         key={index}
-                        src={`http://localhost:8000${thumbnail.image}`}
+                        src={thumbnail.image}
                         alt={`Thumbnail for ${productData.name}`}
                         className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 cursor-pointer rounded-lg border-2 border-transparent hover:border-gray-300 transition-all duration-300"
                         onClick={() => changeImage(thumbnail.image)}

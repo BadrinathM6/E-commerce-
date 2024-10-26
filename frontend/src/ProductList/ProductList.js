@@ -101,7 +101,7 @@ const ProductList = (productId) => {
                             <a href={`/product/${product.id}`} className="no-underline text-inherit">
                                 <div className="flex border border-gray-300 p-4 rounded-lg w-screen hover:shadow-md transition-shadow duration-300">
                                     <div className="w-32 h-32 overflow-hidden mr-4">
-                                        <img src={`http://localhost:8000${product.main_image}`}
+                                        <img src={product.main_image}
                                             alt={product.name}
                                             className="w-full h-full object-cover"
                                         />
