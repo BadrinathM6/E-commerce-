@@ -115,39 +115,91 @@ def product_list(request):
 @api_view(['GET'])
 @permission_classes([AllowAny])
 def product_detail(request, product_id):
-    # Fetch the product or return 404
-    product = get_object_or_404(Product, id=product_id)
-    
-    # Get related images and reviews
-    all_images = product.images.all()
-    thumbnails = all_images.filter(is_thumbnail=True)
-    reviews = Review.objects.filter(product=product).order_by('-created_at')
-    
-    # Fetch similar products (excluding the current one)
-    similar_products = Product.objects.filter(category=product.category).exclude(id=product.id)
-    
-    # Fill remaining similar products if less than 3 are found
-    if similar_products.count() < 3:
-        remaining_count = 3 - similar_products.count()
-        other_products = Product.objects.exclude(Q(category=product.category) | Q(id=product.id))[:remaining_count]
-        similar_products = list(similar_products) + list(other_products)
-    else:
-        similar_products = similar_products[:7]
-    
-    # Use serializer for the main product and similar products
-    product_serializer = ProductSerializer(product)
-    similar_products_serializer = ProductSerializer(similar_products, many=True)
-    
-    # Add thumbnails and reviews to the product data
-    product_data = product_serializer.data
-    product_data['thumbnails'] = [{'image': img.image.url} for img in thumbnails]
-    product_data['reviews'] = [{'user': review.user.username, 'id': review.id, 'rating': review.rating, 'text': review.review} for review in reviews]
-    product_data['similar_products'] = similar_products_serializer.data
-    product_data['description_points'] = product.description.split("*")
+    try:
+        # Fetch the product or return 404
+        product = get_object_or_404(Product, id=product_id)
+        
+        # Get related images and reviews
+        all_images = product.images.all()
+        thumbnails = all_images.filter(is_thumbnail=True)
+        reviews = Review.objects.filter(product=product).order_by('-created_at')
+        
+        # Fetch similar products (excluding the current one)
+        similar_products = Product.objects.filter(category=product.category).exclude(id=product.id)
+        
+        # Fill remaining similar products if less than 3 are found
+        if similar_products.count() < 3:
+            remaining_count = 3 - similar_products.count()
+            other_products = Product.objects.exclude(Q(category=product.category) | Q(id=product.id))[:remaining_count]
+            similar_products = list(similar_products) + list(other_products)
+        else:
+            similar_products = similar_products[:7]
+        
+        # Use serializer for the main product and similar products
+        product_serializer = ProductSerializer(product)
+        similar_products_serializer = ProductSerializer(similar_products, many=True)
+        
+        # Add thumbnails and reviews to the product data
+        product_data = product_serializer.data
+        
+        # Safely handle image URLs
+        try:
+            product_data['thumbnails'] = []
+            for img in thumbnails:
+                try:
+                    # Check if the image field exists and has a URL
+                    if hasattr(img, 'image') and img.image:
+                        if hasattr(img.image, 'url'):
+                            product_data['thumbnails'].append({'image': img.image.url})
+                        else:
+                            # If using Cloudinary, you might need to construct the URL differently
+                            # This assumes you have CLOUDINARY_URL in your environment variables
+                            from cloudinary.utils import cloudinary_url
+                            url, options = cloudinary_url(img.image.public_id)
+                            product_data['thumbnails'].append({'image': url})
+                except Exception as img_error:
+                    logger.error(f"Error processing image {img.id}: {str(img_error)}")
+                    continue
+        except Exception as thumbnail_error:
+            logger.error(f"Error processing thumbnails: {str(thumbnail_error)}")
+            product_data['thumbnails'] = []
+        
+        # Add reviews data
+        product_data['reviews'] = []
+        for review in reviews:
+            try:
+                product_data['reviews'].append({
+                    'user': review.user.username,
+                    'id': review.id,
+                    'rating': review.rating,
+                    'text': review.review
+                })
+            except Exception as review_error:
+                logger.error(f"Error processing review {review.id}: {str(review_error)}")
+                continue
+        
+        # Add similar products
+        product_data['similar_products'] = similar_products_serializer.data
+        
+        # Add description points
+        try:
+            if product.description:
+                product_data['description_points'] = product.description.split("*")
+            else:
+                product_data['description_points'] = []
+        except Exception as desc_error:
+            logger.error(f"Error processing description: {str(desc_error)}")
+            product_data['description_points'] = []
 
-    # Return the final product data as response
-    return Response(product_data)
-
+        # Return the final product data as response
+        return Response(product_data)
+        
+    except Exception as e:
+        logger.error(f"Error in product_detail view: {str(e)}")
+        return Response(
+            {'error': 'An error occurred while fetching product details'},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])

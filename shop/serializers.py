@@ -130,10 +130,29 @@ class ProductImageSerializer(serializers.ModelSerializer):
         model = ProductImage
         fields = ['id', 'product', 'image', 'is_thumbnail']
 
-    def get_image(self, obj):
-        if obj.image:
-            return obj.image.url
-        return None
+    def get_image_url(self, obj):
+        if not obj.image:
+            return None
+            
+        # Get the raw URL string
+        url = obj.image.url
+        
+        # Check if it's a Cloudinary URL
+        if 'cloudinary.com' in url:
+            # Extract the Cloudinary URL
+            try:
+                # Find the position of the actual Cloudinary URL
+                cloudinary_start = url.find('https://', url.find('cloudinary.com') - 8)
+                if cloudinary_start != -1:
+                    url = url[cloudinary_start:]
+                    # Clean up the URL
+                    url = url.replace('\n', '').strip()
+                    return url
+            except Exception as e:
+                print(f"Error processing Cloudinary URL: {e}")
+                return url
+                
+        return url
 
 
 
