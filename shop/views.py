@@ -3,6 +3,7 @@ import os
 import base64
 from django.db.models import Avg
 from django.shortcuts import get_object_or_404
+from shop.utils.db_utils import check_database_health
 from django.db.models import Q
 from django.http import JsonResponse
 from django.contrib.auth import get_user_model
@@ -553,8 +554,8 @@ def password_reset_request(request):
                 uid = urlsafe_base64_encode(force_bytes(user.pk))
                 
                 # Frontend configuration
-                frontend_domain = 'localhost:3000'  # Change this for production
-                frontend_protocol = 'http'  # Use 'https' for production
+                frontend_domain = os.environ.get('FRONTEND_DOMAIN', 'https://rolexcart-ecomerce.web.app')# Change this for production
+                frontend_protocol = 'https'  # Use 'https' for production
                 
                 # Prepare email context
                 context = {
@@ -791,6 +792,22 @@ def remove_from_wishlist(request, product_id):
 def check_wishlist_status(request, product_id):
     is_wishlisted = Wishlist.objects.filter(user=request.user, product_id=product_id).exists()
     return Response({'is_wishlisted': is_wishlisted})
+
+def health_check(request):
+    """Health check endpoint for the application"""
+    database_status = check_database_health()
+    
+    response_data = {
+        'status': 'healthy' if database_status else 'unhealthy',
+        'database': {
+            'connected': database_status,
+            'host': os.environ.get('DB_HOST'),
+            'name': os.environ.get('DB_NAME')
+        }
+    }
+    
+    status_code = 200 if database_status else 503
+    return JsonResponse(response_data, status=status_code)
 
 # client = razorpay.Client(auth=(os.getenv('RAZORPAY_KEY_ID'), os.getenv('RAZORPAY_KEY_SECRET')))
 

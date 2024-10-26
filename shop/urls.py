@@ -3,7 +3,7 @@ from django.contrib.auth import views as auth_views
 from django.conf.urls.static import static
 from django.urls import path
 from .views import (
-    get_product_reviews, home, product_list, product_detail, add_to_cart, remove_from_cart, update_cart, view_cart, checkout, order_List, order_detail, submit_review, register_view, login_view,  
+    get_product_reviews, health_check, home, product_list, product_detail, add_to_cart, remove_from_cart, update_cart, view_cart, checkout, order_List, order_detail, submit_review, register_view, login_view,  
     search, search_suggestions, search_history, submit_review ,saved_addresses, user_profile, buy_now_checkout, password_reset_request, password_reset_confirm,
     update_profile, add_address, delete_address, get_wishlist, toggle_wishlist, remove_from_wishlist, check_wishlist_status
 )
@@ -47,6 +47,7 @@ urlpatterns = [
     path('wishlist/toggle/<int:product_id>/', toggle_wishlist, name='toggle-wishlist'),
     path('wishlist/remove/<int:product_id>/', remove_from_wishlist, name='remove-from-wishlist'),
     path('wishlist/check/<int:product_id>/', check_wishlist_status, name='check-wishlist-status'),
+    path('health/', health_check, name='health_check'),
     # path('create-payment/', create_payment, name='create_payment'),
     # path('verify-payment/', verify_payment, name='verify_payment'),
 

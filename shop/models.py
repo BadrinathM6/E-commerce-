@@ -24,18 +24,18 @@ class NameUser(AbstractUser):
    
     def __str__(self):
         return self.username
-        
+
 # Category Model
 class Category(models.Model):
     name = models.CharField(max_length=255)
-    image = CloudinaryField('image')  # Changed from ImageField
+    image = CloudinaryField('image')
     slug = models.SlugField(unique=True)
 
     def __str__(self):
         return self.name
     
 class Wishlist(models.Model):
-    user = models.ForeignKey(NameUser, on_delete=models.CASCADE, related_name='wishlist')
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='wishlist')
     product = models.ForeignKey('Product', on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -61,7 +61,7 @@ class Product(models.Model):
 
     @property
     def discounted_price(self):
-        if self.discount_percentage > 0:
+        if self.discount_percentage and self.discount_percentage > 0:
             discount_amount = (self.original_price * self.discount_percentage) / 100
             return self.original_price - discount_amount
         return self.original_price  
@@ -79,7 +79,7 @@ class Product(models.Model):
      
     def __str__(self):
         return self.name
-
+    
 # ProductImage Model (For Thumbnails)
 class ProductImage(models.Model):
     product = models.ForeignKey(Product, related_name='images', on_delete=models.CASCADE, null=True, blank=True)
@@ -89,15 +89,14 @@ class ProductImage(models.Model):
     def __str__(self):
         return f"Thumbnail for {self.product.name}" if self.product else "Thumbnail without product reference"
 
-# Cart Model
+# Other models remain the same but with updated user references
 class Cart(models.Model):
-    user = models.ForeignKey(NameUser, on_delete=models.CASCADE, null=True, blank=True)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return f"Cart of {self.user.username}" if self.user else "Cart without user"
 
-# CartItem Model
 class CartItem(models.Model):
     cart = models.ForeignKey(Cart, related_name='items', on_delete=models.CASCADE)
     product = models.ForeignKey(Product, on_delete=models.PROTECT)
@@ -105,21 +104,18 @@ class CartItem(models.Model):
 
     def __str__(self):
         return f"{self.quantity} of {self.product.name}"
-
-# Order Model
+    
 class Order(models.Model):
-    user = models.ForeignKey(NameUser, on_delete=models.CASCADE)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     total_price = models.DecimalField(max_digits=10, decimal_places=2)
     shipping_address = models.CharField(max_length=500)
     ordered_at = models.DateTimeField(auto_now_add=True)
     status = models.CharField(max_length=255, default='Pending')
 
     def clean(self):
-        # Validate that user exists
-        if not NameUser.objects.filter(id=self.user_id).exists():
-            raise ValidationError({'user': 'Selected user does not exist'})
+        if not self.user_id:
+            raise ValidationError({'user': 'User is required'})
         
-        # Validate related OrderItems
         for item in self.items.all():
             if item.product and not Product.objects.filter(id=item.product_id).exists():
                 raise ValidationError({'items': f'Product with id {item.product_id} does not exist'})
@@ -130,8 +126,7 @@ class Order(models.Model):
 
     def __str__(self):
         return f"Order {self.id} by {self.user.username}"
-
-# OrderItem Model
+    
 class OrderItem(models.Model):
     order = models.ForeignKey(Order, related_name='items', on_delete=models.CASCADE)
     product = models.ForeignKey(Product, on_delete=models.PROTECT, null=True, blank=True)
@@ -141,31 +136,28 @@ class OrderItem(models.Model):
     def __str__(self):
         return f"{self.quantity} of {self.product.name if self.product else 'Deleted product'} in Order {self.order.id}"
 
-# Search History Model 
 class SearchHistory(models.Model):
-    user = models.ForeignKey(NameUser, on_delete=models.CASCADE, null=True, blank=True)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True, blank=True)
     query = models.CharField(max_length=255)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return f"Search Query: {self.query} by {self.user.username if self.user else 'Anonymous'}"
-        
-# Review Model
+
 class Review(models.Model):
     RATING_OPTIONS = [(i, str(i)) for i in range(1, 6)] 
 
     product = models.ForeignKey(Product, related_name='reviews', on_delete=models.PROTECT)
-    user = models.ForeignKey(NameUser, on_delete=models.CASCADE) 
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE) 
     review = models.TextField(blank=True, null=True)
     rating = models.IntegerField(choices=RATING_OPTIONS)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return f"{self.product.name} - {self.rating} stars"
-    
 
 class SavedAddress(models.Model):
-    user = models.ForeignKey(NameUser, on_delete=models.CASCADE, related_name='saved_addresses')
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='saved_addresses')
     full_name = models.CharField(max_length=255)
     address_line1 = models.CharField(max_length=255)
     address_line2 = models.CharField(max_length=255, blank=True, null=True)
