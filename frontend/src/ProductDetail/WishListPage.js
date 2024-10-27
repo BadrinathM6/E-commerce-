@@ -3,6 +3,7 @@ import axiosInstance from '../utils/axiosConfig';
 import { Trash2 } from 'lucide-react';
 import { Star } from 'lucide-react';
 import LoadingAnimation from '../Home/Loader';
+import { Helmet } from 'react-helmet';
 
 const WishlistPage = () => {
   const [wishlistItems, setWishlistItems] = useState([]);
@@ -43,6 +44,13 @@ const WishlistPage = () => {
 
   return (
     <div className="container mx-auto px-4 py-8">
+      <Helmet>
+        <title>Wishlist | Rolecart</title>
+        <link 
+          rel="icon" 
+          href="https://res.cloudinary.com/dmohbdzs1/image/upload/v1730048690/fixed-removebg-preview_prw8l9.png" 
+        />
+      </Helmet>
       <h1 className="text-2xl font-bold mb-6">My Wishlist</h1>
       
       {wishlistItems.length === 0 ? (

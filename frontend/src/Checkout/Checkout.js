@@ -175,6 +175,10 @@ const CheckoutPage = () => {
     <div className="container mx-auto px-4 py-8">
       <Helmet>
           <title>Checkout | Rolexcart</title>
+          <link 
+            rel="icon" 
+            href="https://res.cloudinary.com/dmohbdzs1/image/upload/v1730048690/fixed-removebg-preview_prw8l9.png" 
+          />
       </Helmet>
       <h1 className="text-3xl font-bold mb-8">Checkout</h1>
       

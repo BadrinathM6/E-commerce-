@@ -53,6 +53,10 @@ const Login = () => {
         <div className="flex justify-center items-center min-h-screen bg-cover bg-center" style={{ backgroundImage: `url(${background})` }}>
             <Helmet>
                 <title>Login | Rolexcart</title>
+                <link 
+                    rel="icon" 
+                    href="https://res.cloudinary.com/dmohbdzs1/image/upload/v1730048690/fixed-removebg-preview_prw8l9.png" 
+                />
             </Helmet>
             <div className="bg-transparent border-2 border-opacity-20 border-white backdrop-blur-lg shadow-lg text-white rounded-lg p-10 w-96">
                 <h1 className="text-3xl text-center mb-6">Login</h1>

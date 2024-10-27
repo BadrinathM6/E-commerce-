@@ -33,6 +33,10 @@ const PasswordResetForm = () => {
     <div className="max-w-md mx-auto mt-8">
       <Helmet>
         <title>Password Reset | Rolexcart</title>
+        <link 
+          rel="icon" 
+          href="https://res.cloudinary.com/dmohbdzs1/image/upload/v1730048690/fixed-removebg-preview_prw8l9.png" 
+        />
       </Helmet>
       <h2 className="text-2xl font-bold mb-4">Reset Password</h2>
       <form onSubmit={handleSubmit} className="space-y-4">

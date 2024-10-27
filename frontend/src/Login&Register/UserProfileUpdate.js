@@ -254,6 +254,10 @@ const EditProfile = () => {
     <div className="max-w-4xl mx-auto p-4">
       <Helmet>
         <title>Update UserProfile | Rolecart</title>
+        <link 
+          rel="icon" 
+          href="https://res.cloudinary.com/dmohbdzs1/image/upload/v1730048690/fixed-removebg-preview_prw8l9.png" 
+        />
       </Helmet>
       <div className="bg-white rounded-lg shadow-lg p-6">
         <div className="flex items-center space-x-4 mb-6">

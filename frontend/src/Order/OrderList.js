@@ -69,6 +69,10 @@ const OrderList = () => {
     <div className="container mx-auto p-4">
       <Helmet>
         <title>Orders | Rolecart</title>
+        <link 
+          rel="icon" 
+          href="https://res.cloudinary.com/dmohbdzs1/image/upload/v1730048690/fixed-removebg-preview_prw8l9.png" 
+        />
       </Helmet>
       <h1 className="text-2xl font-bold mb-4">Your Orders</h1>
       {orders.length === 0 ? (

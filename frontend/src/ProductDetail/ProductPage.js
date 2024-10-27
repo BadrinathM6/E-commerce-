@@ -98,6 +98,10 @@ const ProductPage = () => {
     <div>
       <Helmet>
         <title>{product.name}| Rolecart</title>
+        <link 
+          rel="icon" 
+          href="https://res.cloudinary.com/dmohbdzs1/image/upload/v1730048690/fixed-removebg-preview_prw8l9.png" 
+        />
       </Helmet>
       
       <Navbar/>

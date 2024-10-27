@@ -6,6 +6,10 @@ const PasswordResetEmailSent = () => {
     <div className="bg-gray-100 min-h-screen flex items-center justify-center">
       <Helmet>
         <title>Password Reset Done | Rolexcart</title>
+        <link 
+          rel="icon" 
+          href="https://res.cloudinary.com/dmohbdzs1/image/upload/v1730048690/fixed-removebg-preview_prw8l9.png" 
+        />
       </Helmet>
       <div className="bg-white p-8 rounded-lg shadow-md w-96 text-center">
         <h2 className="text-2xl font-bold mb-6">Password Reset Email Sent</h2>

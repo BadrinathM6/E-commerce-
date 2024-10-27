@@ -58,6 +58,10 @@ const UserProfile = () => {
     <div className="container mx-auto p-4">
       <Helmet>
         <title>UserProfile | Rolecart</title>
+        <link 
+          rel="icon" 
+          href="https://res.cloudinary.com/dmohbdzs1/image/upload/v1730048690/fixed-removebg-preview_prw8l9.png" 
+        />
       </Helmet>
       <div className="bg-white shadow-lg rounded-lg p-6">
         <div className="flex items-center mb-6">

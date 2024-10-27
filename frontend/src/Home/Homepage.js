@@ -65,6 +65,10 @@ const Homepage = () => {
           <div>
             <Helmet>
               <title>Home - RolexCart</title>
+              <link 
+                rel="icon" 
+                href="https://res.cloudinary.com/dmohbdzs1/image/upload/v1730048690/fixed-removebg-preview_prw8l9.png" 
+              />
               <meta name="description" content="Welcome to RolexCart! Find the best deals and trending products here." />
             </Helmet>
             
