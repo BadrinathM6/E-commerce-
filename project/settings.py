@@ -30,7 +30,7 @@ EMAIL_USE_TLS = True
 EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER')  # Your Gmail address
 EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD')
 
-FRONTEND_DOMAIN = os.environ.get('FRONTEND_DOMAIN', 'https://rolexcart-ecomerce.web.app')  # Change this for production
+FRONTEND_DOMAIN = os.environ.get('DOMAIN')  # Change this for production
 FRONTEND_PROTOCOL = 'https' 
 
 # Quick-start development settings - unsuitable for production
