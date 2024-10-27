@@ -59,6 +59,7 @@ const DealProduct = () => {
                                     className="absolute inset-0 w-full h-full object-cover rounded-lg"
                                     src={getValidImageUrl(product.main_image)}
                                     alt={product.name}
+                                    loading="lazy"
                                     onError={(e) => {
                                         console.log('Image load error:', e.target.src);
                                         e.target.onerror = null;

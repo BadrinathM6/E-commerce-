@@ -95,6 +95,7 @@ INSTALLED_APPS = [
 ASGI_APPLICATION = 'project.asgi.application' 
 
 MIDDLEWARE = [
+    'django.middleware.gzip.GZipMiddleware', 
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
@@ -146,6 +147,13 @@ DATABASES = {
 
 if not DEBUG:
     DATABASES['default']['CONN_MAX_AGE'] = 600
+
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.redis.RedisCache',
+        'LOCATION': 'redis://your-redis-url:6379',
+    }
+}
 
 SECURE_SSL_REDIRECT = True
 SESSION_COOKIE_SECURE = True

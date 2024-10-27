@@ -23,6 +23,7 @@ from django.db.models.query_utils import Q
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.contrib.auth.tokens import default_token_generator
 from django.utils.encoding import force_bytes
+from django.views.decorators.cache import cache_page
 
 logger = logging.getLogger(__name__)
 
@@ -77,6 +78,7 @@ def login_view(request):
 
 @api_view(['GET'])
 @permission_classes([AllowAny])
+@cache_page(60 * 15)
 def home(request):
     trending_products = Product.objects.filter(trending_now=True)[:4]
     deal_products = Product.objects.filter(deals_of_the_day=True)[:4]
@@ -92,6 +94,7 @@ def home(request):
 
 @api_view(['GET'])
 @permission_classes([AllowAny])
+@cache_page(60 * 15)
 def product_list(request):
     products = Product.objects.all()
     category_id = request.GET.get('category')
@@ -116,6 +119,7 @@ def product_list(request):
 
 @api_view(['GET'])
 @permission_classes([AllowAny])
+@cache_page(60 * 15)
 def product_detail(request, product_id):
     try:
         # Fetch the product or return 404

@@ -47,6 +47,7 @@ const SimilarProducts = ({ productId }) => {
                 <img
                   src={product.main_image}
                   alt={product.name}
+                  loading="lazy"
                   className="w-full h-auto rounded-lg mb-2"
                 />
                 <h3 className="text-lg font-medium line-clamp-1">{product.name}</h3>

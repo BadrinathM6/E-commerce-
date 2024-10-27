@@ -103,6 +103,7 @@ const ProductList = (productId) => {
                                     <div className="w-32 h-32 overflow-hidden mr-4">
                                         <img src={product.main_image}
                                             alt={product.name}
+                                            loading="lazy"
                                             className="w-full h-full object-cover"
                                         />
                                     </div>

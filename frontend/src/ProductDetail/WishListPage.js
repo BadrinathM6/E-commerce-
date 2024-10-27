@@ -49,6 +49,7 @@ const WishlistPage = () => {
             <div key={item.id} className="flex items-center border rounded-lg p-4 shadow-sm">
               <img
                 src={item.product.main_image}
+                loading="lazy"
                 alt={item.product.name}
                 className="w-24 h-24 object-cover rounded-md"
               />

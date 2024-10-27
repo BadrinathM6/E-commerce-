@@ -45,7 +45,8 @@ const ProductImages = ({ productId }) => {
                 <WishlistButton productId={productId} />
                 <img 
                     src={mainImage}
-                    alt={productData.name} 
+                    alt={productData.name}
+                    loading="lazy"
                     className="w-full max-w-lg h-auto rounded-lg object-cover" 
                 />
             </div>
@@ -56,6 +57,7 @@ const ProductImages = ({ productId }) => {
                     <img
                         key={index}
                         src={thumbnail.image}
+                        loading="lazy"
                         alt={`Thumbnail for ${productData.name}`}
                         className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 cursor-pointer rounded-lg border-2 border-transparent hover:border-gray-300 transition-all duration-300"
                         onClick={() => changeImage(thumbnail.image)}
