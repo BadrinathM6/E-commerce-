@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useLoading } from './LoadingContext';
+import { Helmet } from 'react-helmet';
 import Navbar from './Navbar';
 import CategoryList from './CategoryList';
 import DealProducts from './DealProducts';
@@ -62,11 +63,16 @@ const Homepage = () => {
     
     return (
           <div>
-              <Navbar />
-              <CategoryList />
-              <DealProducts />
-              <Timer />
-              <TrendingProducts />
+            <Helmet>
+              <title>Home - RolexCart</title>
+              <meta name="description" content="Welcome to RolexCart! Find the best deals and trending products here." />
+            </Helmet>
+            
+            <Navbar />
+            <CategoryList />
+            <DealProducts />
+            <Timer />
+            <TrendingProducts />
           </div>
       );
 };

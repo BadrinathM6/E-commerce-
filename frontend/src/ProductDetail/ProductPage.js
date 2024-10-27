@@ -8,6 +8,7 @@ import ProductReviewForm from './ProductReviewform'; // Corrected to match the f
 import SimilarProducts from './SimiliarProducts'; // Corrected the spelling
 import axiosInstance from '../utils/axiosConfig';
 import LoadingAnimation from '../Home/Loader';
+import { Helmet } from 'react-helmet';
 
 const ProductPage = () => {
   const { productId } = useParams(); // Correctly call useParams to get productId
@@ -94,7 +95,12 @@ const ProductPage = () => {
   }
 
   return (
-    <div><Navbar/>
+    <div>
+      <Helmet>
+        <title>{product.name}| Rolecart</title>
+      </Helmet>
+      
+      <Navbar/>
       <div className="container mx-auto p-4">
         <ProductImages productId={productId} />
         <ProductContent

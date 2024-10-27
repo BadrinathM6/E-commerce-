@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { UserCircle, ShoppingCart, Package, Edit } from 'lucide-react'; // Import the Edit icon (pencil)
 import axiosInstance from '../utils/axiosConfig';
 import { useNavigate } from 'react-router-dom';
+import { Helmet } from 'react-helmet';
+import LoadingAnimation from '../Home/Loader';
 
 const UserProfile = () => {
   const [user, setUser] = useState(null);
@@ -25,7 +27,11 @@ const UserProfile = () => {
   }, []);
 
   if (loading) {
-    return <div className="text-center mt-8">Loading...</div>;
+    return (
+        <>
+            <LoadingAnimation />
+        </>
+    );
   }
 
   if (error) {
@@ -50,6 +56,9 @@ const UserProfile = () => {
 
   return (
     <div className="container mx-auto p-4">
+      <Helmet>
+        <title>UserProfile | Rolecart</title>
+      </Helmet>
       <div className="bg-white shadow-lg rounded-lg p-6">
         <div className="flex items-center mb-6">
           <UserCircle className="w-24 h-24 text-blue-500 mr-4" />

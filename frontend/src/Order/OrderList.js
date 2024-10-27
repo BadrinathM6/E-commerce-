@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ShoppingBag, Package, ArrowRight, Loader2 } from 'lucide-react';
 import axiosInstance from '../utils/axiosConfig';
+import { Helmet } from 'react-helmet';
 
 const OrderList = () => {
   const [orders, setOrders] = useState([]);
@@ -66,6 +67,9 @@ const OrderList = () => {
 
   return (
     <div className="container mx-auto p-4">
+      <Helmet>
+        <title>Orders | Rolecart</title>
+      </Helmet>
       <h1 className="text-2xl font-bold mb-4">Your Orders</h1>
       {orders.length === 0 ? (
         <div className="bg-white rounded-lg shadow-lg p-8 text-center">

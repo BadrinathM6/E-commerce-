@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { UserCircle, Save, AlertTriangle, CheckCircle } from 'lucide-react';
 import axiosInstance from '../utils/axiosConfig';
 import { useNavigate } from 'react-router-dom';
+import { Helmet } from 'react-helmet';
 
 const EditProfile = () => {
   const navigate = useNavigate();
@@ -251,6 +252,9 @@ const EditProfile = () => {
 
   return (
     <div className="max-w-4xl mx-auto p-4">
+      <Helmet>
+        <title>Update UserProfile | Rolecart</title>
+      </Helmet>
       <div className="bg-white rounded-lg shadow-lg p-6">
         <div className="flex items-center space-x-4 mb-6">
           <UserCircle className="w-12 h-12 text-blue-500" />

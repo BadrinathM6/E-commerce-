@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import axiosInstance from '../utils/axiosConfig';
 import { useNavigate } from 'react-router-dom';
+import { Helmet } from 'react-helmet';
 
 const PasswordResetForm = () => {
   const [email, setEmail] = useState('');
@@ -30,6 +31,9 @@ const PasswordResetForm = () => {
 
   return (
     <div className="max-w-md mx-auto mt-8">
+      <Helmet>
+        <title>Password Reset | Rolexcart</title>
+      </Helmet>
       <h2 className="text-2xl font-bold mb-4">Reset Password</h2>
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>

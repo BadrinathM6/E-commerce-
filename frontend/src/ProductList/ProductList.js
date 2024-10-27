@@ -4,6 +4,7 @@ import Navbar from '../Home/Navbar';
 import { useNavigate } from 'react-router-dom';
 import WishlistButton from '../ProductDetail/WishListButton';
 import LoadingAnimation from '../Home/Loader';
+import { Helmet } from 'react-helmet';
 
 const ProductList = (productId) => {
     const [product_data, setProductData] = useState([]);
@@ -91,6 +92,10 @@ const ProductList = (productId) => {
 
     return (
         <div>
+            <Helmet>
+                <title>Product List | Rolecart</title>
+            </Helmet>
+
             <Navbar />
             <div className="flex flex-wrap justify-center gap-4 p-4">
                 {product_data.length > 0 ? (

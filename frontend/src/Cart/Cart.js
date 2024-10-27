@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import axiosInstance from '../utils/axiosConfig';
 import EmptyCart from './CartEmpty';
 import LoadingAnimation from '../Home/Loader';
+import { Helmet } from 'react-helmet'; 
 
 const Cart = () => {
   const [cartData, setCartData] = useState(null);
@@ -105,7 +106,10 @@ const Cart = () => {
   if (isLoading) {
     return (
         <>
-            <LoadingAnimation />
+          <Helmet>
+            <title>Loading Cart...</title>
+          </Helmet>
+          <LoadingAnimation />
         </>
     );
   }
@@ -114,7 +118,12 @@ const Cart = () => {
   if (!cartData || cartData.cart_items.length === 0) return <EmptyCart />;
 
   return (
+
+    
     <div className="bg-gray-100 min-h-screen pb-[100px] overflow-y-auto">
+      <Helmet>
+        <title>Your Cart | RolexCart</title>
+      </Helmet>
       <div className="max-w-3xl mx-auto bg-white border border-gray-200 p-6 rounded-lg shadow-md mt-5">
         {cartData.cart_items.map((item, index) => (
           <div key={item.product.id} className="mb-6">

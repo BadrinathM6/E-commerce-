@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axiosInstance from '../utils/axiosConfig';
 import background from '../images/Logo/login.webp';
+import { Helmet } from 'react-helmet';
 
 const Register = () => {
     const navigate = useNavigate();
@@ -60,6 +61,9 @@ const Register = () => {
 
     return (
         <div className="flex justify-center items-center min-h-screen bg-cover bg-center" style={{ backgroundImage: `url(${background})` }}>
+            <Helmet>
+                <title>Register | Rolexcart</title>
+            </Helmet>
             <div className="bg-transparent border-2 border-opacity-20 border-white backdrop-blur-lg shadow-lg text-white rounded-lg p-10 w-96">
                 <h1 className="text-3xl text-center mb-6">Register</h1>
                 {alert.message && (

@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import axiosInstance from '../utils/axiosConfig';
 import { Trash2 } from 'lucide-react';
 import { Star } from 'lucide-react';
+import LoadingAnimation from '../Home/Loader';
 
 const WishlistPage = () => {
   const [wishlistItems, setWishlistItems] = useState([]);
@@ -32,8 +33,13 @@ const WishlistPage = () => {
   };
 
   if (loading) {
-    return <div className="flex justify-center items-center min-h-screen">Loading...</div>;
+    return (
+        <>
+            <LoadingAnimation />
+        </>
+    );
   }
+
 
   return (
     <div className="container mx-auto px-4 py-8">
