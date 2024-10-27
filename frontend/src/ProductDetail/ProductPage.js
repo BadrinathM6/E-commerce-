@@ -74,7 +74,12 @@ const ProductPage = () => {
 
   // Handle loading state
   if (loading) {
-    return <div className="text-center py-8">Loading...</div>;
+    return (
+        <>
+            <Navbar />
+            <LoadingAnimation />
+        </>
+    );
   }
 
   // Handle error state

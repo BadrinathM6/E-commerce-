@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import Swal from 'sweetalert2';
 import axiosInstance from '../utils/axiosConfig'
+import LoadingAnimation from '../Home/Loader';
 
 const CheckoutPage = () => {
   const [cartItems, setCartItems] = useState([]);
@@ -159,7 +160,14 @@ const CheckoutPage = () => {
     }
   };
 
-  if (loading) return <div className="text-center py-8">Loading...</div>;
+  if (loading) {
+    return (
+        <>
+            <LoadingAnimation />
+        </>
+    );
+  }
+
   if (error) return <div className="text-center py-8 text-red-600">{error}</div>;
 
   return (

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import axiosInstance from '../utils/axiosConfig'
+import LoadingAnimation from '../Home/Loader';
 
 const OrderPage = () => {
   const [order, setOrder] = useState(null);
@@ -23,7 +24,14 @@ const OrderPage = () => {
     fetchOrder();
   }, [orderId]);
 
-  if (loading) return <div className="text-center py-8">Loading...</div>;
+  if (loading) {
+    return (
+        <>
+            <LoadingAnimation />
+        </>
+    );
+  }
+
   if (error) return <div className="text-center py-8 text-red-500">{error}</div>;
   if (!order) return <div className="text-center py-8">Order not found</div>;
 

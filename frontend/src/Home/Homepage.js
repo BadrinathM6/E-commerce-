@@ -6,10 +6,13 @@ import DealProducts from './DealProducts';
 import Timer from './Timer';
 import TrendingProducts from './TrendingProducts';
 import axiosInstance from '../utils/axiosConfig';
+import LoadingAnimation from './Loader';
 
 const Homepage = () => {
   const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
   const { startLoading, stopLoading } = useLoading();
 
   useEffect(() => {
@@ -19,6 +22,7 @@ const Homepage = () => {
     const fetchData = async () => {
       try {
         startLoading(loadId);
+        setLoading(true)
         const response = await axiosInstance.get('');
         
         if (mounted) {
@@ -33,6 +37,7 @@ const Homepage = () => {
       } finally {
         if (mounted) {
           stopLoading(loadId);
+          setLoading(false)
         }
       }
     };
@@ -45,6 +50,15 @@ const Homepage = () => {
       stopLoading(loadId); // Ensure loading is stopped if component unmounts
     };
   }, []);
+
+  if (loading) {
+    return (
+        <>
+            <Navbar />
+            <LoadingAnimation />
+        </>
+    );
+  }
     
     return (
           <div>

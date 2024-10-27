@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import axiosInstance from '../utils/axiosConfig';
 import EmptyCart from './CartEmpty';
+import LoadingAnimation from '../Home/Loader';
 
 const Cart = () => {
   const [cartData, setCartData] = useState(null);
@@ -101,7 +102,14 @@ const Cart = () => {
     }
   };
 
-  if (isLoading) return <div>Loading...</div>;
+  if (isLoading) {
+    return (
+        <>
+            <LoadingAnimation />
+        </>
+    );
+  }
+
   if (error) return <div className="text-red-500">{error}</div>;
   if (!cartData || cartData.cart_items.length === 0) return <EmptyCart />;
 
@@ -113,7 +121,7 @@ const Cart = () => {
             <div className="flex items-start">
               <div className="flex flex-col items-center mr-6">
                 <img
-                  src={`http://127.0.0.1:8000${item.product.main_image}`}
+                  src={item.product.main_image}
                   alt={item.product.name}
                   className="w-24 h-24 object-cover border border-gray-200 rounded mb-2"
                 />
