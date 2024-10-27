@@ -7,6 +7,7 @@ import ProductReview from './ProductReview';
 import ProductReviewForm from './ProductReviewform'; // Corrected to match the filename
 import SimilarProducts from './SimiliarProducts'; // Corrected the spelling
 import axiosInstance from '../utils/axiosConfig';
+import LoadingAnimation from '../Home/Loader';
 
 const ProductPage = () => {
   const { productId } = useParams(); // Correctly call useParams to get productId
