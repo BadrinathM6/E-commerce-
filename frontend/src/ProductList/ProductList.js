@@ -3,6 +3,7 @@ import axiosInstance from '../utils/axiosConfig';
 import Navbar from '../Home/Navbar';
 import { useNavigate } from 'react-router-dom';
 import WishlistButton from '../ProductDetail/WishListButton';
+import LoadingAnimation from '../Home/Loader';
 
 const ProductList = (productId) => {
     const [product_data, setProductData] = useState([]);
@@ -72,9 +73,7 @@ const ProductList = (productId) => {
         return (
             <>
                 <Navbar />
-                <div className="flex justify-center items-center min-h-screen">
-                    <div className="text-center py-8">Loading...</div>
-                </div>
+                <LoadingAnimation />
             </>
         );
     }
