@@ -12,19 +12,37 @@ const Homepage = () => {
   const { startLoading, stopLoading } = useLoading();
 
   useEffect(() => {
+    let mounted = true;
+    const loadId = 'homepage-' + Date.now();
+
     const fetchData = async () => {
-      startLoading('homepage');
       try {
+        startLoading(loadId);
         const response = await axiosInstance.get('');
-        setData(response.data);
+        
+        if (mounted) {
+          setData(response.data);
+          setError(null);
+        }
       } catch (error) {
-        console.error("Error fetching data", error);
+        console.error("Error fetching data:", error);
+        if (mounted) {
+          setError('Failed to load data');
+        }
       } finally {
-        stopLoading('homepage');
+        if (mounted) {
+          stopLoading(loadId);
+        }
       }
     };
 
     fetchData();
+
+    // Cleanup function
+    return () => {
+      mounted = false;
+      stopLoading(loadId); // Ensure loading is stopped if component unmounts
+    };
   }, []);
     
     return (

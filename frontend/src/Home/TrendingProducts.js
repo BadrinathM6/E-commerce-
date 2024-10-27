@@ -5,42 +5,60 @@ import { useLoading } from './LoadingContext';
 
 const TrendingProducts = () => {
   const [trendingProducts, setTrendingProducts] = useState([]);
-  const { startLoading, stopLoading } = useLoading();
   const [error, setError] = useState(null);
+  const { startLoading, stopLoading } = useLoading();
 
   useEffect(() => {
+    let mounted = true;
+    const loadId = 'trendingProducts-' + Date.now();
+
     const fetchTrendingProducts = async () => {
-      startLoading('trendingProducts')
       try {
+        startLoading(loadId);
         const response = await axiosInstance.get('');
-        console.log('Trending products response:', response.data);
-        // Ensure we're accessing the correct property in the response
-        const products = Array.isArray(response.data) ? response.data : 
-                        response.data.trending_products || [];
-        setTrendingProducts(products);
-        setError(null);
-      } catch (err) {
-        console.error("Error fetching trending products:", err);
-        setError('Failed to load trending products');
+        
+        if (mounted) {
+          // Handle different response structures
+          const products = Array.isArray(response.data) 
+            ? response.data 
+            : response.data.trending_products || [];
+          
+          setTrendingProducts(products);
+          setError(null);
+        }
+      } catch (error) {
+        console.error("Error fetching trending products:", error);
+        if (mounted) {
+          setError('Failed to load trending products');
+        }
       } finally {
-        stopLoading('trendingProducts');
+        if (mounted) {
+          stopLoading(loadId);
+        }
       }
     };
 
     fetchTrendingProducts();
+
+    return () => {
+      mounted = false;
+      stopLoading(loadId); // Cleanup on unmount
+    };
   }, []);
 
-  if (error) return (
-    <div className="text-center py-8">
-      <p className="text-red-600">{error}</p>
-      <button 
-        onClick={() => window.location.reload()}
-        className="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-      >
-        Retry
-      </button>
-    </div>
-  );
+  if (error) {
+    return (
+      <div className="text-center py-8">
+        <p className="text-red-600">{error}</p>
+        <button 
+          onClick={() => window.location.reload()}
+          className="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+        >
+          Retry
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-4 gap-6 px-4 py-8">

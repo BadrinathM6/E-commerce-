@@ -28,22 +28,37 @@ const DealProduct = () => {
     };
 
     useEffect(() => {
+        let mounted = true;
+        const loadId = 'dealProducts-' + Date.now();
+    
         const fetchDealProducts = async () => {
-        startLoading('dealProducts');
-        try {
+          try {
+            startLoading(loadId);
             const response = await axiosInstance.get('');
-            setDealProducts(response.data.deal_products);
-            setError(null);
-        } catch (error) {
+            
+            if (mounted) {
+              setDealProducts(response.data.deal_products || []);
+              setError(null);
+            }
+          } catch (error) {
             console.error("Error fetching deal products:", error);
-            setError('Failed to load deal products');
-        } finally {
-            stopLoading('dealProducts');
-        }
+            if (mounted) {
+              setError('Failed to load deal products');
+            }
+          } finally {
+            if (mounted) {
+              stopLoading(loadId);
+            }
+          }
         };
     
         fetchDealProducts();
-    }, []);
+    
+        return () => {
+          mounted = false;
+          stopLoading(loadId);
+        };
+      }, []);
 
     if (error) return <div className="text-center py-8 text-red-600">{error}</div>;
 
