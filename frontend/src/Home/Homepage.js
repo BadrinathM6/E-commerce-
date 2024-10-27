@@ -1,4 +1,5 @@
-import React, {useEffect, useState} from 'react';
+import React, { useEffect, useState } from 'react';
+import { useLoading } from './LoadingContext';
 import Navbar from './Navbar';
 import CategoryList from './CategoryList';
 import DealProducts from './DealProducts';
@@ -6,23 +7,25 @@ import Timer from './Timer';
 import TrendingProducts from './TrendingProducts';
 import axiosInstance from '../utils/axiosConfig';
 
-const Homepage = () =>{
-    const [data, setData] = useState(null);
+const Homepage = () => {
+  const [data, setData] = useState(null);
+  const { startLoading, stopLoading } = useLoading();
 
   useEffect(() => {
-    axiosInstance.get('')
-      .then(response => {
-        console.log(response.data); // Check data in the console
-        setData(response.data); // Save the data into state
-      })
-      .catch(error => {
+    const fetchData = async () => {
+      startLoading('homepage');
+      try {
+        const response = await axiosInstance.get('');
+        setData(response.data);
+      } catch (error) {
         console.error("Error fetching data", error);
-      });
+      } finally {
+        stopLoading('homepage');
+      }
+    };
+
+    fetchData();
   }, []);
-      
-    if (!data) {
-      return <div>Loading...</div>; // Display a loading state if no data yet
-    }
     
     return (
           <div>

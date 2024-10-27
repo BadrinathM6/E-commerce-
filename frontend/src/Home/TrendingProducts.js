@@ -1,14 +1,16 @@
 import React, { useEffect, useState } from 'react';
 import ProductImage from './ProductImage';
 import axiosInstance from '../utils/axiosConfig';
+import { useLoading } from './LoadingContext';
 
 const TrendingProducts = () => {
   const [trendingProducts, setTrendingProducts] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const { startLoading, stopLoading } = useLoading();
   const [error, setError] = useState(null);
 
   useEffect(() => {
     const fetchTrendingProducts = async () => {
+      startLoading('trendingProducts')
       try {
         const response = await axiosInstance.get('');
         console.log('Trending products response:', response.data);
@@ -21,18 +23,12 @@ const TrendingProducts = () => {
         console.error("Error fetching trending products:", err);
         setError('Failed to load trending products');
       } finally {
-        setLoading(false);
+        stopLoading('trendingProducts');
       }
     };
 
     fetchTrendingProducts();
   }, []);
-
-  if (loading) return (
-    <div className="flex justify-center items-center py-8">
-      <div className="animate-pulse text-gray-600">Loading products...</div>
-    </div>
-  );
 
   if (error) return (
     <div className="text-center py-8">

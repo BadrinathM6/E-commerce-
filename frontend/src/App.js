@@ -17,12 +17,15 @@ import PasswordResetComplete from './Login&Register/ResetDone';
 import EditProfile from './Login&Register/UserProfileUpdate';
 import WishlistPage from './ProductDetail/WishListPage';
 import PaymentComponent from './Checkout/RazorPayment';
+import { LoadingProvider } from './Home/LoadingContext';
 
 const App = () =>{
   return(
     <Router>
       <Routes>
-        <Route path='/' element={<Homepage/>}/>
+        <LoadingProvider>
+          <Route path='/' element={<Homepage/>}/>
+        </LoadingProvider>
         <Route path='/product-list' element={<ProductList/>}/>
         <Route path='/product/:productId' element={<ProductPage/>}/>
         <Route path='/cart' element={<Cart/>}/>

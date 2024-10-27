@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import axiosInstance from '../utils/axiosConfig';
+import { useLoading } from './LoadingContext';
 
 const DealProduct = () => {
     const [dealProducts, setDealProducts] = useState([]);
-    const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const { startLoading, stopLoading } = useLoading();
 
     const isValidImageUrl = (url) => {
         if (!url) return false;
@@ -28,23 +29,22 @@ const DealProduct = () => {
 
     useEffect(() => {
         const fetchDealProducts = async () => {
-            try {
-                const response = await axiosInstance.get('');
-                console.log("Deal products response:", response.data.deal_products);
-                setDealProducts(response.data.deal_products);
-                setError(null);
-            } catch (error) {
-                console.error("Error fetching deal products:", error);
-                setError('Failed to load deal products');
-            } finally {
-                setLoading(false);
-            }
+        startLoading('dealProducts');
+        try {
+            const response = await axiosInstance.get('');
+            setDealProducts(response.data.deal_products);
+            setError(null);
+        } catch (error) {
+            console.error("Error fetching deal products:", error);
+            setError('Failed to load deal products');
+        } finally {
+            stopLoading('dealProducts');
+        }
         };
-
+    
         fetchDealProducts();
     }, []);
 
-    if (loading) return <div className="text-center py-8">Loading...</div>;
     if (error) return <div className="text-center py-8 text-red-600">{error}</div>;
 
     return (

@@ -1,33 +1,33 @@
 import React, { useEffect, useState } from 'react';
 import axiosInstance from '../utils/axiosConfig';
+import { useLoading } from './LoadingContext';
 
 const CategoryList = () => {
     const [categories, setCategories] = useState([]);
-    const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const { startLoading, stopLoading } = useLoading(); // Add loading context
 
-    // Rest of your component remains the same...
     useEffect(() => {
-        axiosInstance.get('') // Make sure this is the correct endpoint
-        .then((response) => {
-            console.log(response.data);
-            if (response.data && response.data.categories) {
-                setCategories(response.data.categories);
-            } else {
-                setError('No categories found in the response');
+        const fetchCategories = async () => {
+            startLoading('categories'); // Start loading
+            try {
+                const response = await axiosInstance.get(''); // Adjust endpoint if needed
+                if (response.data && response.data.categories) {
+                    setCategories(response.data.categories);
+                    setError(null);
+                } else {
+                    setError('No categories found in the response');
+                }
+            } catch (error) {
+                console.error("Error fetching categories:", error);
+                setError('Failed to fetch categories');
+            } finally {
+                stopLoading('categories'); // Stop loading
             }
-            setLoading(false);
-        })
-        .catch((error) => {
-            console.error("Error fetching categories", error);
-            setError('Failed to fetch categories');
-            setLoading(false);
-        });
-    }, []);
+        };
 
-    if (loading) {
-        return <div>Loading...</div>;
-    }
+        fetchCategories();
+    }, [startLoading, stopLoading]);
 
     if (error) {
         return <div>Error: {error}</div>;
