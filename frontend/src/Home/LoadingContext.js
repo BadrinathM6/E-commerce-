@@ -1,8 +1,20 @@
-// LoadingContext.js
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 
 const LoadingContext = createContext();
+
+// Separate component for the Lottie animation
+const LoadingAnimation = () => {
+  return (
+    <div className="w-64 h-64">
+      <iframe 
+        src="https://lottie.host/embed/7fb743b5-2537-4e9e-8e6c-9abc631d526b/p2EGQxKeCN.json"
+        className="w-full h-full border-none"
+        title="Loading animation"
+      />
+    </div>
+  );
+};
 
 export const LoadingProvider = ({ children }) => {
   const [loadingComponents, setLoadingComponents] = useState(new Set());
@@ -73,11 +85,14 @@ export const LoadingProvider = ({ children }) => {
       {children}
       {isVisible && (
         <div 
-          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999] transition-opacity duration-200"
-          style={{ opacity: isVisible ? 1 : 0 }}
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999] transition-opacity duration-300 ease-in-out"
+          style={{ 
+            opacity: isVisible ? 1 : 0,
+            backdropFilter: 'blur(4px)'
+          }}
         >
-          <div className="relative">
-            <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-blue-500"></div>
+          <div className="bg-white rounded-lg p-4 shadow-lg transform transition-transform duration-300 ease-in-out scale-100">
+            <LoadingAnimation />
           </div>
         </div>
       )}
@@ -101,3 +116,5 @@ export const useLoading = () => {
   
   return context;
 };
+
+export default LoadingProvider;
