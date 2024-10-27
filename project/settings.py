@@ -30,8 +30,8 @@ EMAIL_USE_TLS = True
 EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER')  # Your Gmail address
 EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD')
 
-FRONTEND_DOMAIN = os.environ.get('DOMAIN')  # Change this for production
-FRONTEND_PROTOCOL = 'https' 
+FRONTEND_DOMAIN = os.environ.get('DOMAIN', 'rolexcart-ecomerce.web.app').rstrip('/')
+FRONTEND_PROTOCOL = 'https'
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
@@ -184,7 +184,7 @@ CORS_ALLOW_HEADERS = [
     'x-requested-with',
 ]
 
-print("Frontend Domain:", os.environ.get('FRONTEND_DOMAIN'))
+print("Frontend Domain:", os.environ.get('DOMAIN'))
 
 
 # Password validation

@@ -1,5 +1,6 @@
 import logging
 import os
+from django.conf import settings
 import base64
 from django.db.models import Avg
 from django.shortcuts import get_object_or_404
@@ -553,9 +554,12 @@ def password_reset_request(request):
                 token = default_token_generator.make_token(user)
                 uid = urlsafe_base64_encode(force_bytes(user.pk))
                 
-                # Frontend configuration
-                frontend_domain = os.environ.get('DOMAIN')# Change this for production
-                frontend_protocol = 'https'  # Use 'https' for production
+                # Get domain settings from settings.py
+                frontend_domain = settings.FRONTEND_DOMAIN
+                frontend_protocol = settings.FRONTEND_PROTOCOL
+                
+                # Build the reset URL
+                reset_url = f"{frontend_protocol}://{frontend_domain}/reset/{uid}/{token}"
                 
                 # Prepare email context
                 context = {
@@ -566,6 +570,7 @@ def password_reset_request(request):
                     "user": user,
                     'token': token,
                     'protocol': frontend_protocol,
+                    'reset_url': reset_url  # Add the complete reset URL to the context
                 }
                 
                 # Render email content
@@ -577,12 +582,14 @@ def password_reset_request(request):
                     send_mail(
                         subject="Password Reset Request",
                         message=email_content,
-                        from_email=os.environ.get('EMAIL_HOST_USER'),
+                        from_email=settings.EMAIL_HOST_USER,
                         recipient_list=[user.email],
                         fail_silently=False,
                     )
                     
                     logger.info(f"Password reset email sent successfully to {user.email}")
+                    logger.info(f"Reset URL generated: {reset_url}")  # Log the reset URL for debugging
+                    
                     return Response({
                         'message': 'Password reset email has been sent.',
                         'status': 'success'
