@@ -9,6 +9,7 @@ import axiosInstance from '../utils/axiosConfig';
 
 const Homepage = () => {
   const [data, setData] = useState(null);
+  const [error, setError] = useState(null);
   const { startLoading, stopLoading } = useLoading();
 
   useEffect(() => {
