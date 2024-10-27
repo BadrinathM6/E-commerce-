@@ -554,7 +554,7 @@ def password_reset_request(request):
                 uid = urlsafe_base64_encode(force_bytes(user.pk))
                 
                 # Frontend configuration
-                frontend_domain = os.environ.get('FRONTEND_DOMAIN', 'https://rolexcart-ecomerce.web.app')# Change this for production
+                frontend_domain = os.environ.get('DOMAIN')# Change this for production
                 frontend_protocol = 'https'  # Use 'https' for production
                 
                 # Prepare email context
