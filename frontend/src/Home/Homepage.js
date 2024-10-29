@@ -65,10 +65,10 @@ const Homepage = () => {
           <div>
             <Helmet>
               <title>Home - RolexCart</title>
-              <link 
-                rel="icon" 
-                href="https://res.cloudinary.com/dmohbdzs1/image/upload/v1730048690/fixed-removebg-preview_prw8l9.png" 
-              />
+              <link rel="icon" type="image/png" sizes="32x32" href="https://res.cloudinary.com/dmohbdzs1/image/upload/v1730216073/favicon-32x32_pkyjnn.png" />
+              <link rel="icon" type="image/png" sizes="16x16" href="https://res.cloudinary.com/dmohbdzs1/image/upload/v1730216072/favicon-16x16_wjvbeg.png" />
+              <link rel="apple-touch-icon" sizes="180x180" href="https://res.cloudinary.com/dmohbdzs1/image/upload/v1730216072/apple-touch-icon_ro6fth.png" />
+              <link rel="icon" type="image/x-icon" href="https://res.cloudinary.com/dmohbdzs1/image/upload/v1730216073/favicon_v00s9z.ico" /> 
               <meta name="description" content="Welcome to RolexCart! Find the best deals and trending products here." />
             </Helmet>
             
