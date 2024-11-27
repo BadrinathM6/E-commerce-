@@ -83,7 +83,7 @@ class Product(models.Model):
 # ProductImage Model (For Thumbnails)
 class ProductImage(models.Model):
     product = models.ForeignKey(Product, related_name='images', on_delete=models.CASCADE, null=True, blank=True)
-    image = CloudinaryField('image') 
+    image = CloudinaryField('image')
     is_thumbnail = models.BooleanField(default=False)
 
     def __str__(self):
@@ -115,10 +115,6 @@ class Order(models.Model):
     def clean(self):
         if not self.user_id:
             raise ValidationError({'user': 'User is required'})
-        
-        for item in self.items.all():
-            if item.product and not Product.objects.filter(id=item.product_id).exists():
-                raise ValidationError({'items': f'Product with id {item.product_id} does not exist'})
 
     def save(self, *args, **kwargs):
         self.clean()
